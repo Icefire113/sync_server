@@ -1,4 +1,2 @@
 pub mod create_user;
 pub mod get_all_discriminators;
-pub mod query_discrim;
-pub mod types;

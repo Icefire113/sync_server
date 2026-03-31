@@ -61,6 +61,10 @@ async fn main() {
             "/api/create_user",
             post(routes::api::create_user::create_user),
         )
+        .route(
+            "/api/get_all_discriminators",
+            get(routes::api::get_all_discriminators::get_all_discriminators),
+        )
         .with_state(app_state);
 
     axum::serve(TcpListener::bind("0.0.0.0:3000").await.unwrap(), app)

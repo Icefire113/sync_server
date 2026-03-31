@@ -40,6 +40,7 @@ pub mod tracked_file {
         pub user_id: i64,
         #[sea_orm(belongs_to, from = "user_id", to = "id")]
         pub user: HasOne<super::user::Entity>,
+        pub discriminator: String,
     }
 
     // https://www.sea-ql.org/SeaORM/docs/generate-entity/entity-format/#active-model-behavior
