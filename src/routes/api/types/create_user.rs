@@ -5,6 +5,5 @@ pub struct CreateUserReq {
 
 #[derive(serde::Serialize, Debug)]
 pub struct CreateUserRes {
-    pub username: Option<String>,
-    pub errors: Option<String>,
+    pub username: String,
 }

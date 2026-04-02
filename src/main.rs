@@ -49,7 +49,7 @@ async fn main() {
         db,
         admin_token: util::get_random_string_s(),
     };
-    info!("!!! Instnace admin token: {}", app_state.admin_token);
+    info!("Instnace admin token: {}", app_state.admin_token);
 
     let app: Router = Router::new()
         .route("/version", get(routes::version::version))

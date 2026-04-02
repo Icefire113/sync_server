@@ -3,7 +3,7 @@ use base64::{Engine, prelude::BASE64_URL_SAFE_NO_PAD};
 
 use crate::AppState;
 
-pub const HEADER_AUTHORIZATION: &str = "Authorization";
+pub const HEADER_AUTHORIZATION: &'static str = "Authorization";
 
 pub fn get_random_string_s() -> String {
     let mut buff = vec![0u8; 64];
