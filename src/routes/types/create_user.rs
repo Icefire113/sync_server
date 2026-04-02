@@ -6,4 +6,5 @@ pub struct CreateUserReq {
 #[derive(serde::Serialize, Debug)]
 pub struct CreateUserRes {
     pub username: String,
+    pub access_key: String,
 }

@@ -34,6 +34,7 @@ async fn main() {
         .with(tracing_subscriber::fmt::layer())
         .try_init()
         .unwrap();
+    info!("Starting sync_server ver: {}", env!("CARGO_PKG_VERSION"));
 
     let db = db::establish_connection().await;
     db::is_db_conn_ok(&db).await;
@@ -59,7 +60,7 @@ async fn main() {
         )
         .route(
             "/api/create_user",
-            post(routes::api::create_user::create_user),
+            post(routes::api::auth::create_user::create_user),
         )
         .route(
             "/api/get_all_discriminators",

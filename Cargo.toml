@@ -25,3 +25,4 @@ serde_json = { version = "1.0.149" }
 rand = { version = "0.10.0", features = ["serde"] }
 base64 = "0.22.1"
 anyhow = { version = "1.0.102", features = ["backtrace"] }
+argon2 = { version = "0.5.3", features = ["std"] }

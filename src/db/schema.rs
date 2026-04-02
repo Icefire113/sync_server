@@ -10,6 +10,7 @@ pub mod user {
         pub id: i64,
         #[sea_orm(unique)]
         pub username: String,
+        pub access_key: String,
         pub enabled: bool,
         #[sea_orm(has_many)]
         pub tracked_files: HasMany<super::tracked_file::Entity>,

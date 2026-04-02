@@ -5,15 +5,13 @@ use tracing::error;
 use crate::{
     AppState,
     db::schema::{tracked_file, user},
-    routes::api::types::{
+    routes::types::{
         generic_internal_err::{InternalErrorCodes, InternalErrorRes},
         get_all_discriminators::{GetAllDiscriminatorsReq, GetAllDiscriminatorsRes},
     },
 };
 
-/**
- * Get all discriminators for a given user
- */
+/// Get all discriminators for a given user
 pub async fn get_all_discriminators(
     State(state): State<AppState>,
     Json(input): Json<GetAllDiscriminatorsReq>,

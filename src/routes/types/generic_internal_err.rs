@@ -24,6 +24,7 @@ impl InternalErrorRes {
 pub enum InternalErrorCodes {
     NoSuchUserFoundError,
     InternalDBError,
+    PasswordHashError,
 }
 
 impl Display for InternalErrorCodes {
@@ -34,6 +35,9 @@ impl Display for InternalErrorCodes {
             }
             InternalErrorCodes::InternalDBError => {
                 write!(f, "E0002")
+            }
+            InternalErrorCodes::PasswordHashError => {
+                write!(f, "E0003")
             }
         }
     }
