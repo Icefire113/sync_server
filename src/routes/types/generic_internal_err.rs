@@ -9,11 +9,12 @@ pub struct InternalErrorRes {
 }
 
 impl InternalErrorRes {
-    pub fn new(code: InternalErrorCodes) -> Self {
+    pub fn new(code: InternalErrorCode) -> Self {
         Self {
             code: code.to_string(),
             error_detail: match code {
-                InternalErrorCodes::NoSuchUserFoundError => Some("User not found".to_string()),
+                InternalErrorCode::NoSuchUserFoundError => Some("User not found".to_string()),
+                InternalErrorCode::UsernameTooShort => Some("Username too short".to_string()),
                 _ => None,
             },
         }
@@ -21,23 +22,27 @@ impl InternalErrorRes {
 }
 
 #[derive(serde::Deserialize, serde::Serialize, Debug)]
-pub enum InternalErrorCodes {
+pub enum InternalErrorCode {
     NoSuchUserFoundError,
     InternalDBError,
-    PasswordHashError,
+    AccessKeyHashError,
+    UsernameTooShort,
 }
 
-impl Display for InternalErrorCodes {
+impl Display for InternalErrorCode {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            InternalErrorCodes::NoSuchUserFoundError => {
+            InternalErrorCode::NoSuchUserFoundError => {
                 write!(f, "E0001")
             }
-            InternalErrorCodes::InternalDBError => {
+            InternalErrorCode::InternalDBError => {
                 write!(f, "E0002")
             }
-            InternalErrorCodes::PasswordHashError => {
+            InternalErrorCode::AccessKeyHashError => {
                 write!(f, "E0003")
+            }
+            InternalErrorCode::UsernameTooShort => {
+                write!(f, "E0004")
             }
         }
     }

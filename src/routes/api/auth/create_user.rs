@@ -11,7 +11,7 @@ use crate::{
     db::schema::user,
     routes::types::{
         create_user::{CreateUserReq, CreateUserRes},
-        generic_internal_err::{InternalErrorCodes, InternalErrorRes},
+        generic_internal_err::{InternalErrorCode, InternalErrorRes},
     },
     util::get_random_string_s,
 };
@@ -22,16 +22,23 @@ pub async fn create_user(
 ) -> Result<(StatusCode, Json<CreateUserRes>), (StatusCode, Json<InternalErrorRes>)> {
     // TODO: Find a better way to lock down account creation
     // util::assert_auth(&state, &headers)?;
+    if input.username.len() < 1 {
+        return Err((
+            StatusCode::BAD_REQUEST,
+            Json(InternalErrorRes::new(InternalErrorCode::UsernameTooShort)),
+        ));
+    }
 
-    let pw = get_random_string_s();
-    let salt = SaltString::generate(&mut OsRng);
+    let access_key = get_random_string_s();
     let hashed = Argon2::default()
-        .hash_password(pw.as_bytes(), &salt)
+        .hash_password(access_key.as_bytes(), &SaltString::generate(&mut OsRng))
         .map_err(|e| {
-            error!("Error hashing password: {:?}", e);
+            error!("Error hashing access key: {:?}", e);
             (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(InternalErrorRes::new(InternalErrorCodes::PasswordHashError)),
+                Json(InternalErrorRes::new(
+                    InternalErrorCode::AccessKeyHashError,
+                )),
             )
         })?
         .to_string();
@@ -47,7 +54,7 @@ pub async fn create_user(
         error!("Error creating user: {:?}", e);
         (
             StatusCode::INTERNAL_SERVER_ERROR,
-            Json(InternalErrorRes::new(InternalErrorCodes::InternalDBError)),
+            Json(InternalErrorRes::new(InternalErrorCode::InternalDBError)),
         )
     })?;
 
@@ -55,7 +62,7 @@ pub async fn create_user(
         StatusCode::CREATED,
         Json(CreateUserRes {
             username: input.username,
-            access_key: pw,
+            access_key,
         }),
     ))
 }

@@ -6,7 +6,7 @@ use crate::{
     AppState,
     db::schema::{tracked_file, user},
     routes::types::{
-        generic_internal_err::{InternalErrorCodes, InternalErrorRes},
+        generic_internal_err::{InternalErrorCode, InternalErrorRes},
         get_all_discriminators::{GetAllDiscriminatorsReq, GetAllDiscriminatorsRes},
     },
 };
@@ -23,7 +23,7 @@ pub async fn get_all_discriminators(
             error!("Error finding tracked files: {:?}", e);
             (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(InternalErrorRes::new(InternalErrorCodes::InternalDBError)),
+                Json(InternalErrorRes::new(InternalErrorCode::InternalDBError)),
             )
         })?;
 
@@ -33,7 +33,7 @@ pub async fn get_all_discriminators(
             return Err((
                 StatusCode::INTERNAL_SERVER_ERROR,
                 Json(InternalErrorRes::new(
-                    InternalErrorCodes::NoSuchUserFoundError,
+                    InternalErrorCode::NoSuchUserFoundError,
                 )),
             ));
         }
@@ -47,7 +47,7 @@ pub async fn get_all_discriminators(
             error!("Error finding tracked files: {:?}", e);
             (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(InternalErrorRes::new(InternalErrorCodes::InternalDBError)),
+                Json(InternalErrorRes::new(InternalErrorCode::InternalDBError)),
             )
         })?;
 
