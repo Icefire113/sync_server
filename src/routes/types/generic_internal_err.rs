@@ -15,6 +15,7 @@ impl InternalErrorRes {
             error_detail: match code {
                 InternalErrorCode::NoSuchUserFoundError => Some("User not found".to_string()),
                 InternalErrorCode::UsernameTooShort => Some("Username too short".to_string()),
+                InternalErrorCode::UsernameTooLong => Some("Username too long".to_string()),
                 _ => None,
             },
         }
@@ -27,6 +28,7 @@ pub enum InternalErrorCode {
     InternalDBError,
     AccessKeyHashError,
     UsernameTooShort,
+    UsernameTooLong,
 }
 
 impl Display for InternalErrorCode {
@@ -43,6 +45,9 @@ impl Display for InternalErrorCode {
             }
             InternalErrorCode::UsernameTooShort => {
                 write!(f, "E0004")
+            }
+            InternalErrorCode::UsernameTooLong => {
+                write!(f, "E0005")
             }
         }
     }

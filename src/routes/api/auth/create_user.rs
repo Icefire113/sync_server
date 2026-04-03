@@ -27,6 +27,11 @@ pub async fn create_user(
             StatusCode::BAD_REQUEST,
             Json(InternalErrorRes::new(InternalErrorCode::UsernameTooShort)),
         ));
+    } else if input.username.len() > 50 {
+        return Err((
+            StatusCode::BAD_REQUEST,
+            Json(InternalErrorRes::new(InternalErrorCode::UsernameTooLong)),
+        ));
     }
 
     let access_key = get_random_string_s();
@@ -36,9 +41,7 @@ pub async fn create_user(
             error!("Error hashing access key: {:?}", e);
             (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(InternalErrorRes::new(
-                    InternalErrorCode::AccessKeyHashError,
-                )),
+                Json(InternalErrorRes::new(InternalErrorCode::AccessKeyHashError)),
             )
         })?
         .to_string();
