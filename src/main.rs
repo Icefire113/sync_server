@@ -61,7 +61,7 @@ async fn main() {
     let app: Router = Router::new()
         .route(endpoints::VERSION, get(routes::version::version))
         .route(
-            "/api/query_discrim/{discrim}",
+            endpoints::QUERY_SYNCED_FILE,
             get(routes::api::query_discrim::query_discrim),
         )
         .route(
