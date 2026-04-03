@@ -56,7 +56,7 @@ pub async fn get_all_discriminators(
         Json(GetAllDiscriminatorsRes {
             discriminators: tracked_files
                 .iter()
-                .map(|e| e.discriminator.to_owned())
+                .map(|e| todo!("fix this shit"))
                 .collect(),
         }),
     ))
