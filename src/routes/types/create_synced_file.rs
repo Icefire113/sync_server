@@ -6,6 +6,7 @@ use uuid::Uuid;
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct CreateDiscrimReq {
+    /// TODO: Move this into the JWT
     pub username: String,
     pub file: SyncedFile,
 }
