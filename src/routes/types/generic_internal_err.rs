@@ -16,6 +16,8 @@ impl InternalErrorRes {
                 InternalErrorCode::NoSuchUserFoundError => Some("User not found".to_string()),
                 InternalErrorCode::UsernameTooShort => Some("Username too short".to_string()),
                 InternalErrorCode::UsernameTooLong => Some("Username too long".to_string()),
+                InternalErrorCode::FileAlreadyExists => Some("File already exists".to_string()),
+                InternalErrorCode::UsernameTaken => Some("Username taken".to_string()),
                 _ => None,
             },
         }
@@ -29,6 +31,8 @@ pub enum InternalErrorCode {
     AccessKeyHashError,
     UsernameTooShort,
     UsernameTooLong,
+    FileAlreadyExists,
+    UsernameTaken,
 }
 
 impl Display for InternalErrorCode {
@@ -48,6 +52,12 @@ impl Display for InternalErrorCode {
             }
             InternalErrorCode::UsernameTooLong => {
                 write!(f, "E0005")
+            }
+            InternalErrorCode::FileAlreadyExists => {
+                write!(f, "E0006")
+            }
+            InternalErrorCode::UsernameTaken => {
+                write!(f, "E0007")
             }
         }
     }
