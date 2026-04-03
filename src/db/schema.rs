@@ -45,7 +45,8 @@ pub mod tracked_file {
         #[sea_orm(belongs_to, from = "user_id", to = "id")]
         pub user: HasOne<super::user::Entity>,
 
-        pub hash: u64,
+        /// This is the hash of the file, we need to store as i64 cause postgres, but we should treat it as a u64
+        pub hash: i64,
         pub custom_name: Option<String>,
         pub file_last_modified: DateTime<Utc>,
     }
