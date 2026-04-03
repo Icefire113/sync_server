@@ -9,6 +9,8 @@ use tokio::net::TcpListener;
 use tracing::info;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
+use crate::routes::types::endpoints;
+
 mod db;
 mod routes;
 mod util;
@@ -57,21 +59,21 @@ async fn main() {
     info!("Instnace admin token: {}", app_state.admin_token);
 
     let app: Router = Router::new()
-        .route("/version", get(routes::version::version))
+        .route(endpoints::VERSION, get(routes::version::version))
         .route(
             "/api/query_discrim/{discrim}",
             get(routes::api::query_discrim::query_discrim),
         )
         .route(
-            "/api/auth/create_user",
+            endpoints::CREATE_USER,
             post(routes::api::auth::create_user::create_user),
         )
         .route(
-            "/api/get_all_discriminators",
+            endpoints::GET_ALL_SYNCED_FILES,
             get(routes::api::get_all_discriminators::get_all_discriminators),
         )
         .route(
-            "/api/synced_file/create",
+            endpoints::CREATE_SYNCED_FILE,
             post(routes::api::synced_file::create::create),
         )
         .with_state(app_state);

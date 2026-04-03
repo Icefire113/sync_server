@@ -24,7 +24,6 @@ impl InternalErrorRes {
     }
 }
 
-#[derive(serde::Deserialize, serde::Serialize, Debug)]
 pub enum InternalErrorCode {
     NoSuchUserFoundError,
     InternalDBError,
