@@ -3,7 +3,7 @@ use argon2::{
     password_hash::{SaltString, rand_core::OsRng},
 };
 use axum::{Json, extract::State, http::StatusCode};
-use sea_orm::{ActiveModelTrait, ActiveValue::Set, DbErr};
+use sea_orm::{ActiveModelTrait, ActiveValue::Set, DbErr, sea_query::error};
 use tracing::error;
 
 use crate::{
@@ -34,38 +34,63 @@ pub async fn create_user(
         ));
     }
 
-    let access_key = get_random_string_s();
-    let hashed = Argon2::default()
-        .hash_password(access_key.as_bytes(), &SaltString::generate(&mut OsRng))
-        .map_err(|e| {
-            error!("Error hashing access key: {:?}", e);
-            (
+    // If username is taken, return an error else create user and return response
+    match user::Entity::find_by_username(input.username.to_owned())
+        .one(&state.db)
+        .await
+    {
+        Ok(user) => {
+            match user {
+                Some(_) => {
+                    return Err((
+                        StatusCode::BAD_REQUEST,
+                        Json(InternalErrorRes::new(InternalErrorCode::UsernameTaken)),
+                    ));
+                }
+                None => {
+                    let access_key = get_random_string_s();
+                    let hashed = Argon2::default()
+                        .hash_password(access_key.as_bytes(), &SaltString::generate(&mut OsRng))
+                        .map_err(|e| {
+                            error!("Error hashing access key: {:?}", e);
+                            (
+                                StatusCode::INTERNAL_SERVER_ERROR,
+                                Json(InternalErrorRes::new(InternalErrorCode::AccessKeyHashError)),
+                            )
+                        })?
+                        .to_string();
+
+                    let user = user::ActiveModel {
+                        username: Set(input.username.to_owned()),
+                        access_key: Set(hashed.to_owned()),
+                        ..Default::default()
+                    };
+
+                    // TODO: Test if username is already taken and return a custom error if so
+                    user.insert(&state.db).await.map_err(|e: DbErr| {
+                        error!("Error creating user: {:?}", e);
+                        (
+                            StatusCode::INTERNAL_SERVER_ERROR,
+                            Json(InternalErrorRes::new(InternalErrorCode::InternalDBError)),
+                        )
+                    })?;
+
+                    Ok((
+                        StatusCode::CREATED,
+                        Json(CreateUserRes {
+                            username: input.username,
+                            access_key,
+                        }),
+                    ))
+                }
+            }
+        }
+        Err(e) => {
+            error!("Error finding user: {:?}", e);
+            return Err((
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(InternalErrorRes::new(InternalErrorCode::AccessKeyHashError)),
-            )
-        })?
-        .to_string();
-
-    let user = user::ActiveModel {
-        username: Set(input.username.to_owned()),
-        access_key: Set(hashed.to_owned()),
-        ..Default::default()
-    };
-
-    // TODO: Test if username is already taken and return a custom error if so
-    user.insert(&state.db).await.map_err(|e: DbErr| {
-        error!("Error creating user: {:?}", e);
-        (
-            StatusCode::INTERNAL_SERVER_ERROR,
-            Json(InternalErrorRes::new(InternalErrorCode::InternalDBError)),
-        )
-    })?;
-
-    Ok((
-        StatusCode::CREATED,
-        Json(CreateUserRes {
-            username: input.username,
-            access_key,
-        }),
-    ))
+                Json(InternalErrorRes::new(InternalErrorCode::InternalDBError)),
+            ));
+        }
+    }
 }
