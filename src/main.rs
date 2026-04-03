@@ -1,3 +1,5 @@
+use std::env;
+
 use axum::{
     Router,
     routing::{get, post},
@@ -68,7 +70,14 @@ async fn main() {
         )
         .with_state(app_state);
 
-    axum::serve(TcpListener::bind("0.0.0.0:3000").await.unwrap(), app)
+    let addr = format!(
+        "{}:{}",
+        env::var("HOST").expect("HOST should be specifed in env"),
+        env::var("PORT").expect("PORT should be specifed in env")
+    );
+    info!("Server listening on {}", addr);
+
+    axum::serve(TcpListener::bind(addr).await.unwrap(), app)
         .await
         .unwrap();
 }
