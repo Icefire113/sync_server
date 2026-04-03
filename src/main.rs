@@ -44,9 +44,11 @@ async fn main() {
     db.get_schema_builder()
         .register(db::schema::user::Entity)
         .register(db::schema::tracked_file::Entity)
+        .register(db::schema::machine_path::Entity)
         .sync(&db)
         .await
         .unwrap();
+    info!("DB schema synced");
 
     let app_state = AppState {
         db,
@@ -61,12 +63,16 @@ async fn main() {
             get(routes::api::query_discrim::query_discrim),
         )
         .route(
-            "/api/create_user",
+            "/api/auth/create_user",
             post(routes::api::auth::create_user::create_user),
         )
         .route(
             "/api/get_all_discriminators",
             get(routes::api::get_all_discriminators::get_all_discriminators),
+        )
+        .route(
+            "/api/synced_file/create",
+            post(routes::api::synced_file::create::create),
         )
         .with_state(app_state);
 
