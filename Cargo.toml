@@ -17,6 +17,7 @@ sea-orm = { version = "2.0.0-rc.37", features = [
     "macros",
     "with-json",
     "with-chrono",
+    "with-uuid",
     "schema-sync",
     "entity-registry",
 ] }
@@ -27,3 +28,5 @@ base64 = "0.22.1"
 anyhow = { version = "1.0.102", features = ["backtrace"] }
 argon2 = { version = "0.5.3", features = ["std"] }
 jsonwebtoken = { version = "10.3.0", features = ["rust_crypto", "rsa"] }
+chrono = { version = "0.4.44", features = ["serde"] }
+uuid = { version = "1.23.0", features = ["serde", "v4", "fast-rng"] }
