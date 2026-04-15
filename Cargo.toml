@@ -11,7 +11,7 @@ tracing = "0.1.44"
 tracing-subscriber = { version = "0.3.23", features = ["env-filter"] }
 tower-http = { version = "0.6.8", features = ["request-id", "trace"] }
 dotenvy = "0.15.7"
-sea-orm = { version = "2.0.0-rc.37", features = [
+sea-orm = { version = "2.0.0-rc.38", features = [
     "sqlx-postgres",
     "runtime-tokio-native-tls",
     "macros",
