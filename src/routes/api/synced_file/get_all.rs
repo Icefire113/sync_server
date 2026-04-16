@@ -12,7 +12,7 @@ use crate::{
 };
 
 /// Get all discriminators for a given user
-pub async fn get_all_discriminators(
+pub async fn get_all_ids(
     State(state): State<AppState>,
     Json(input): Json<GetAllDiscriminatorsReq>,
 ) -> Result<(StatusCode, Json<GetAllDiscriminatorsRes>), (StatusCode, Json<InternalErrorRes>)> {
@@ -54,10 +54,7 @@ pub async fn get_all_discriminators(
     Ok((
         StatusCode::OK,
         Json(GetAllDiscriminatorsRes {
-            discriminators: tracked_files
-                .iter()
-                .map(|e| todo!("fix this shit"))
-                .collect(),
+            discriminators: tracked_files.iter().map(|e| e.id.to_string()).collect(),
         }),
     ))
 }

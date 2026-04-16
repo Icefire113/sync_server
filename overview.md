@@ -14,7 +14,7 @@
 
 ### Discriminators
 
-`GET /api/synced_file/get_all` -> gets all of a users discriminators (authenticated)
+`GET /api/synced_file/get_all_ids` -> gets all of a users synced file ids (authenticated)
 
 Query params:
 

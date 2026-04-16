@@ -71,8 +71,8 @@ async fn main() {
             post(routes::api::auth::create_user::create_user),
         )
         .route(
-            endpoints::GET_ALL_SYNCED_FILES,
-            get(routes::api::get_all_discriminators::get_all_discriminators),
+            endpoints::GET_ALL_SYNCED_FILE_IDS,
+            get(routes::api::synced_file::get_all::get_all_ids),
         )
         .route(
             endpoints::CREATE_SYNCED_FILE,
