@@ -1,13 +1,11 @@
 use std::{env, time::Duration};
 
-use dotenvy::dotenv;
 use sea_orm::{ConnectOptions, Database, DatabaseConnection};
 use tracing::debug;
 
 pub mod schema;
 
 pub async fn establish_connection() -> DatabaseConnection {
-    dotenv().ok();
     let db_uri = env::var("DATABASE_URL").expect("DATABASE_URL should be set in env");
 
     // DB connection options

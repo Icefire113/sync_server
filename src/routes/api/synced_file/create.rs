@@ -6,40 +6,20 @@ use tracing::{error, warn};
 
 use crate::{
     AppState,
-    db::schema::{machine_path, tracked_file, user},
+    db::schema::{machine_path, tracked_file},
     routes::types::{
-        create_synced_file::{CreateDiscrimReq, CreateDiscrimRes},
+        create_synced_file::{CreateSyncedFileReq, CreateSyncedFileRes},
         generic_internal_err::{InternalErrorCode, InternalErrorRes},
     },
+    util::get_user_by_username,
 };
 
 pub async fn create(
     State(state): State<AppState>,
-    Json(input): Json<CreateDiscrimReq>,
-) -> Result<(StatusCode, Json<CreateDiscrimRes>), (StatusCode, Json<InternalErrorRes>)> {
-    let user = user::Entity::find_by_username(&input.username)
-        .one(&state.db)
-        .await
-        .map_err(|e| {
-            error!("Error finding a user: {:?}", e);
-            (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                Json(InternalErrorRes::new(InternalErrorCode::InternalDBError)),
-            )
-        })?;
-
+    Json(input): Json<CreateSyncedFileReq>,
+) -> Result<(StatusCode, Json<CreateSyncedFileRes>), (StatusCode, Json<InternalErrorRes>)> {
     // Ensure that the user exists
-    let user = match user {
-        Some(user) => user,
-        None => {
-            return Err((
-                StatusCode::INTERNAL_SERVER_ERROR,
-                Json(InternalErrorRes::new(
-                    InternalErrorCode::NoSuchUserFoundError,
-                )),
-            ));
-        }
-    };
+    let user = get_user_by_username(&input.username, &state).await?;
 
     // If the file already exists, return an error as we shouldn't be creating files with the same id
     match tracked_file::Entity::find_by_id(input.file.id)
@@ -63,9 +43,6 @@ pub async fn create(
             ));
         }
     }
-
-    //TODO: Upload the file to s3
-    warn!("TODO: Upload the file to s3");
 
     state
         .db
@@ -105,5 +82,8 @@ pub async fn create(
             )
         })?;
 
-    Ok((StatusCode::CREATED, Json(CreateDiscrimRes {})))
+    //TODO: Upload the file to s3 and then store the s3 url in the db
+    warn!("TODO: Upload the file to s3");
+
+    Ok((StatusCode::CREATED, Json(CreateSyncedFileRes {})))
 }

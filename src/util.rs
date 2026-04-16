@@ -1,7 +1,15 @@
-use axum::http::{HeaderMap, StatusCode};
+use axum::{
+    Json,
+    http::{HeaderMap, StatusCode},
+};
 use base64::{Engine, prelude::BASE64_URL_SAFE_NO_PAD};
+use tracing::error;
 
-use crate::AppState;
+use crate::{
+    AppState,
+    db::schema::user,
+    routes::types::generic_internal_err::{InternalErrorCode, InternalErrorRes},
+};
 
 pub const HEADER_AUTHORIZATION: &'static str = "Authorization";
 
@@ -23,4 +31,32 @@ pub fn assert_auth(state: &AppState, headers: &HeaderMap) -> Result<(), StatusCo
         return Err(StatusCode::FORBIDDEN);
     }
     Ok(())
+}
+
+pub async fn get_user_by_username(
+    username: &String,
+    state: &AppState,
+) -> Result<user::Model, (StatusCode, Json<InternalErrorRes>)> {
+    Ok(
+        match user::Entity::find_by_username(username)
+            .one(&state.db)
+            .await
+            .map_err(|e| {
+                error!("Error finding a user: {:?}", e);
+                (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    Json(InternalErrorRes::new(InternalErrorCode::InternalDBError)),
+                )
+            })? {
+            Some(user) => user,
+            None => {
+                return Err((
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    Json(InternalErrorRes::new(
+                        InternalErrorCode::NoSuchUserFoundError,
+                    )),
+                ));
+            }
+        },
+    )
 }

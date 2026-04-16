@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 #[derive(Debug, Deserialize, Serialize)]
-pub struct CreateDiscrimReq {
+pub struct CreateSyncedFileReq {
     /// TODO: Move this into the JWT
     pub username: String,
     pub file: SyncedFile,
@@ -27,4 +27,14 @@ pub struct FileState {
 }
 
 #[derive(Debug, Deserialize, Serialize)]
-pub struct CreateDiscrimRes {}
+pub struct CreateSyncedFileRes {}
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct CreateManySyncedFileReq {
+    /// TODO: Move this into the JWT
+    pub username: String,
+    pub files: Vec<SyncedFile>,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct CreateManySyncedFileRes {}

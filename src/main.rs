@@ -4,6 +4,7 @@ use axum::{
     Router,
     routing::{get, post},
 };
+use dotenvy::dotenv;
 use sea_orm::DatabaseConnection;
 use tokio::net::TcpListener;
 use tracing::info;
@@ -38,6 +39,7 @@ async fn main() {
         .with(tracing_subscriber::fmt::layer())
         .try_init()
         .unwrap();
+    dotenv().ok();
     info!("Starting sync_server ver: {}", env!("CARGO_PKG_VERSION"));
 
     let db = db::establish_connection().await;
@@ -75,6 +77,10 @@ async fn main() {
         .route(
             endpoints::CREATE_SYNCED_FILE,
             post(routes::api::synced_file::create::create),
+        )
+        .route(
+            endpoints::CREATE_MANY_SYNCED_FILES,
+            post(routes::api::synced_file::create_many::create_many),
         )
         .with_state(app_state);
 
