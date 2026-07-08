@@ -3,7 +3,7 @@ use argon2::{
     password_hash::{SaltString, rand_core::OsRng},
 };
 use axum::{Json, extract::State, http::StatusCode};
-use sea_orm::{ActiveModelTrait, ActiveValue::Set, DbErr, sea_query::error};
+use sea_orm::{ActiveModelTrait, ActiveValue::Set, DbErr};
 use tracing::error;
 
 use crate::{
