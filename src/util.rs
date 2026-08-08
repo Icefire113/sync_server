@@ -11,7 +11,6 @@ pub fn get_random_string_s() -> String {
     StdRng::from_rng(&mut rng()).fill(&mut buff);
 
     format!("{}", LowerCaseHexSlice(&buff))
-    // BASE64_URL_SAFE_NO_PAD.encode(buff)
 }
 
 #[allow(unused)]
