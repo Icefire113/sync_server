@@ -1,62 +1,37 @@
-use axum::{
-    Json,
-    http::{HeaderMap, StatusCode},
-};
-use base64::{Engine, prelude::BASE64_URL_SAFE_NO_PAD};
-use tracing::error;
+use std::fmt::Display;
 
-use crate::{
-    AppState,
-    db::schema::user,
-    routes::types::generic_internal_err::{InternalErrorCode, InternalErrorRes},
-};
+use rand::{RngExt, SeedableRng, rng, rngs::StdRng};
 
-pub const HEADER_AUTHORIZATION: &'static str = "Authorization";
+/// The number of bytes to generate for secure random strings (api keys, admin tokens, etc)
+const SECURE_RANDOM_SIZE: usize = 32;
 
+/// Gets a random string of 64 hex digits (32 bytes) generated from a cryptographically secure random number generator ([StdRng])
 pub fn get_random_string_s() -> String {
-    let mut buff = vec![0u8; 64];
-    rand::fill(&mut buff);
+    let mut buff: [u8; SECURE_RANDOM_SIZE] = [0u8; _];
+    StdRng::from_rng(&mut rng()).fill(&mut buff);
 
-    BASE64_URL_SAFE_NO_PAD.encode(buff)
+    format!("{}", LowerCaseHexSlice(&buff))
+    // BASE64_URL_SAFE_NO_PAD.encode(buff)
 }
 
-// TODO(pg): Move this to a middleware
-pub fn assert_auth(state: &AppState, headers: &HeaderMap) -> Result<(), StatusCode> {
-    let auth_key = match headers.get(HEADER_AUTHORIZATION) {
-        Some(value) => value.to_str().map_err(|_| StatusCode::BAD_REQUEST)?,
-        None => return Err(StatusCode::BAD_REQUEST),
-    };
-
-    if auth_key != state.admin_token {
-        return Err(StatusCode::FORBIDDEN);
+#[allow(unused)]
+struct LowerCaseHexSlice<'a>(&'a [u8]);
+impl Display for LowerCaseHexSlice<'_> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        for b in self.0 {
+            write!(f, "{:02x}", b)?;
+        }
+        Ok(())
     }
-    Ok(())
 }
 
-pub async fn get_user_by_username(
-    username: &String,
-    state: &AppState,
-) -> Result<user::Model, (StatusCode, Json<InternalErrorRes>)> {
-    Ok(
-        match user::Entity::find_by_username(username)
-            .one(&state.db)
-            .await
-            .map_err(|e| {
-                error!("Error finding a user: {:?}", e);
-                (
-                    StatusCode::INTERNAL_SERVER_ERROR,
-                    Json(InternalErrorRes::new(InternalErrorCode::InternalDBError)),
-                )
-            })? {
-            Some(user) => user,
-            None => {
-                return Err((
-                    StatusCode::INTERNAL_SERVER_ERROR,
-                    Json(InternalErrorRes::new(
-                        InternalErrorCode::NoSuchUserFoundError,
-                    )),
-                ));
-            }
-        },
-    )
+#[allow(unused)]
+struct UpperCaseHexSlice<'a>(&'a [u8]);
+impl Display for UpperCaseHexSlice<'_> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        for b in self.0 {
+            write!(f, "{:02X}", b)?;
+        }
+        Ok(())
+    }
 }

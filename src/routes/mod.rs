@@ -1,3 +1,3 @@
 pub mod api;
-pub mod version;
 pub mod types;
+pub mod version;

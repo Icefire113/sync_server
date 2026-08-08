@@ -1,18 +1,17 @@
 use std::env;
 
-use axum::{
-    Router,
-    routing::{get, post},
-};
+use axum::{Router, routing::get};
 use dotenvy::dotenv;
 use sea_orm::DatabaseConnection;
 use tokio::net::TcpListener;
+use tower_http::trace::TraceLayer;
 use tracing::info;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
-use crate::routes::types::endpoints;
+use crate::routes::api::{self};
 
 mod db;
+mod middleware;
 mod routes;
 mod util;
 
@@ -42,43 +41,26 @@ async fn main() {
     dotenv().ok();
     info!("Starting sync_server ver: {}", env!("CARGO_PKG_VERSION"));
 
-    let db = db::establish_connection().await;
+    let db: DatabaseConnection = db::establish_connection().await;
     db::is_db_conn_ok(&db).await;
 
-    db.get_schema_registry("db::schema::*")
+    db.get_schema_registry("sync_server::db::schema::*")
         .sync(&db)
         .await
         .expect("Failed to sync schema with database");
     info!("DB schema synced");
 
-    let app_state = AppState {
+    let app_state: AppState = AppState {
         db,
         admin_token: util::get_random_string_s(),
     };
     info!("Instnace admin token: {}", app_state.admin_token);
 
     let app: Router = Router::new()
-        .route(endpoints::VERSION, get(routes::version::version))
-        .route(
-            endpoints::QUERY_SYNCED_FILE,
-            get(routes::api::query_discrim::query_discrim),
-        )
-        .route(
-            endpoints::CREATE_USER,
-            post(routes::api::auth::create_user::create_user),
-        )
-        .route(
-            endpoints::GET_ALL_SYNCED_FILE_IDS,
-            get(routes::api::synced_file::get_all::get_all_ids),
-        )
-        .route(
-            endpoints::CREATE_SYNCED_FILE,
-            post(routes::api::synced_file::create::create),
-        )
-        .route(
-            endpoints::CREATE_MANY_SYNCED_FILES,
-            post(routes::api::synced_file::create_many::create_many),
-        )
+        .route("/version", get(routes::version::version))
+        .nest("/api", api::build_api_router(app_state.clone()))
+        // TODO: move to config
+        .layer(TraceLayer::new_for_http())
         .with_state(app_state);
 
     let addr = format!(
