@@ -1,0 +1,25 @@
+info:
+  name: request_token
+  type: http
+  seq: 3
+
+http:
+  method: POST
+  url: "{{BASE_URL}}/api/auth/request_token"
+  body:
+    type: json
+    data: |-
+      {
+        "username": "testy mc test face",
+        "password": "password",
+        "token_name": "testing token DO NOT DELETE!!!",
+        "duration_days": 10000
+      }
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+docs: Creates a new access token with a given duration in days from a username and password (create_token creates a new one from an already existing and valid token)

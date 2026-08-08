@@ -1,0 +1,7 @@
+name: Local Dev
+variables:
+  - name: BASE_URL
+    value: http://localhost:3000
+  - secret: true
+    name: TEST_AUTH_TOKEN
+    description: ""

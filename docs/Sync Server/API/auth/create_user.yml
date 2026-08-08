@@ -1,0 +1,23 @@
+info:
+  name: create_user
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: "{{BASE_URL}}/api/auth/create_user"
+  body:
+    type: json
+    data: |-
+      {
+        "username": "testy mc test face #3",
+        "password": "password"
+      }
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+docs: Creates a new user with a given username and password, returns the username as well as the inital access token with a default duration of 1 year (365 days)
