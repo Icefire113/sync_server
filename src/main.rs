@@ -4,6 +4,9 @@ use axum::{Router, routing::get};
 use dotenvy::dotenv;
 use sea_orm::DatabaseConnection;
 use tokio::net::TcpListener;
+
+#[cfg(feature = "response-compression")]
+use tower_http::compression::CompressionLayer;
 use tower_http::trace::TraceLayer;
 use tracing::info;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
@@ -61,12 +64,19 @@ async fn main() {
     };
     info!("Instnace admin token: {}", app_state.admin_token);
 
-    let app: Router = Router::new()
+    let app: Router<AppState> = Router::new()
         .route("/version", get(routes::version::version))
-        .nest("/api", api::build_api_router(app_state.clone()))
-        // TODO: move to config
-        .layer(TraceLayer::new_for_http())
-        .with_state(app_state);
+        .nest("/api", api::build_api_router(app_state.clone()));
+    #[cfg(feature = "response-compression")]
+    let app: Router<AppState> = app.layer(
+        CompressionLayer::new()
+            .br(true)
+            .gzip(true)
+            .zstd(true),
+    );
+    // TODO: move to config
+    let app: Router<AppState> = app.layer(TraceLayer::new_for_http());
+    let app: Router = app.with_state(app_state);
 
     let addr = format!(
         "{}:{}",
@@ -75,6 +85,7 @@ async fn main() {
     );
 
     info!("Server listening on {}", addr);
+
     axum::serve(TcpListener::bind(addr).await.unwrap(), app)
         .await
         .unwrap();
