@@ -6,7 +6,9 @@ use axum::{
     response::Response,
 };
 use chrono::Utc;
-use sea_orm::{ColumnTrait, EntityTrait, ModelTrait, QueryFilter};
+use sea_orm::{
+    ActiveModelTrait, ActiveValue::Set, ColumnTrait, EntityTrait, ModelTrait, QueryFilter,
+};
 use sha2::{Digest, Sha256};
 use tracing::error;
 
@@ -94,6 +96,15 @@ pub async fn check_authenticated(
                             StatusCode::INTERNAL_SERVER_ERROR,
                             Json(InternalErrorRes::new(InternalErrorCode::InternalError)),
                         )})?;
+                    let mut tok: access_token::ActiveModel = tok.into();
+                    tok.last_used_at = Set(Some(Utc::now()));
+                    tok.save(&state.db).await.map_err(|e| {
+                        error!("Error updating access token for auth {:?}", e);
+                        (
+                            StatusCode::INTERNAL_SERVER_ERROR,
+                            Json(InternalErrorRes::new(InternalErrorCode::InternalDBError)),
+                        )
+                    })?;
                     req.extensions_mut().insert(user);
                     Ok(next.run(req).await)
                 }
