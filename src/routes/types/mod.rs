@@ -7,6 +7,7 @@ pub mod create_user;
 pub mod internal_err;
 pub mod request_token;
 pub mod revoke_token;
+pub mod get_token_info;
 
 /// The API response type for the entire api, either a success or an error with a status code and either a typed response, or an error response
 pub type ApiResponse<T> = Result<(StatusCode, T), ApiError>;
