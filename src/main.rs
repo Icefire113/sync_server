@@ -72,8 +72,8 @@ async fn main() {
             .expect("Failed to parse saved admin token hash")
             .to_string(),
         None => {
-            info!("Admin token not provided, generating random token");
             let tok: String = util::get_random_string_s();
+            info!("Admin token not provided, generating random token");
             info!("Instnace admin token: {}", tok);
             Argon2::default()
                 .hash_password(tok.as_bytes(), &SaltString::generate(&mut OsRng))
