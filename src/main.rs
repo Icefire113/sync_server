@@ -45,13 +45,10 @@ async fn main() {
     let db = db::establish_connection().await;
     db::is_db_conn_ok(&db).await;
 
-    db.get_schema_builder()
-        .register(db::schema::user::Entity)
-        .register(db::schema::tracked_file::Entity)
-        .register(db::schema::machine_path::Entity)
+    db.get_schema_registry("db::schema::*")
         .sync(&db)
         .await
-        .unwrap();
+        .expect("Failed to sync schema with database");
     info!("DB schema synced");
 
     let app_state = AppState {

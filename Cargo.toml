@@ -5,13 +5,13 @@ edition = "2024"
 
 [dependencies]
 axum = { version = "0.8.9", features = ["macros"] }
-tokio = { version = "1.52.3", features = ["full"] }
+tokio = { version = "1.53.1", features = ["full"] }
 tower = { version = "0.5.3", features = ["full"] }
 tracing = "0.1.44"
 tracing-subscriber = { version = "0.3.23", features = ["env-filter"] }
 tower-http = { version = "0.7.0", features = ["request-id", "trace"] }
 dotenvy = "0.15.7"
-sea-orm = { version = "2.0.0-rc.38", features = [
+sea-orm = { version = "2.0.1", features = [
     "sqlx-postgres",
     "runtime-tokio-native-tls",
     "macros",
@@ -21,12 +21,12 @@ sea-orm = { version = "2.0.0-rc.38", features = [
     "schema-sync",
     "entity-registry",
 ] }
-serde = { version = "1.0.228", features = ["derive"] }
-serde_json = { version = "1.0.150" }
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = { version = "1.0.151" }
 rand = { version = "0.10.2", features = ["serde"] }
-base64 = "0.22.1"
-anyhow = { version = "1.0.103", features = ["backtrace"] }
+base64 = "0.23.1"
+anyhow = { version = "1.0.104", features = ["backtrace"] }
 argon2 = { version = "0.5.3", features = ["std"] }
-jsonwebtoken = { version = "10.4.0", features = ["rust_crypto", "rsa"] }
+jsonwebtoken = { version = "11.0.0", features = ["rust_crypto"] }
 chrono = { version = "0.4.45", features = ["serde"] }
-uuid = { version = "1.23.4", features = ["serde", "v4", "fast-rng"] }
+uuid = { version = "1.24.0", features = ["serde", "v4", "fast-rng"] }
