@@ -1,6 +1,8 @@
 use axum::{Extension, Json, extract::State, http::StatusCode};
 use chrono::Utc;
-use sea_orm::{ActiveModelTrait, ActiveValue::Set, EntityTrait, ModelTrait};
+use sea_orm::{
+    ActiveModelTrait, ActiveValue::Set, ColumnTrait, EntityTrait, ModelTrait, QueryFilter,
+};
 use tracing::error;
 
 use crate::{
@@ -19,6 +21,7 @@ pub async fn revoke_token(
     Json(req): Json<RevokeTokenReq>,
 ) -> ApiResponse<()> {
     let token_model: access_token::Model = match access_token::Entity::find_by_id(req.id)
+        .filter(access_token::Column::UserId.eq(user.id))
         .one(&state.db)
         .await
         .map_err(|e| {
@@ -36,12 +39,6 @@ pub async fn revoke_token(
             ));
         }
     };
-    if token_model.user_id != user.id {
-        return Err((
-            StatusCode::FORBIDDEN,
-            Json(InternalErrorRes::new(InternalErrorCode::Forbidden)),
-        ));
-    }
 
     if token_model.revoked_at.is_some() {
         return Err((
