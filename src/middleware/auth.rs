@@ -76,7 +76,8 @@ pub async fn check_authenticated(
                             ));
                         }
                     }
-                    let user = tok
+                    // grab the user that the token is for
+                    let user: user::Model = tok
                         .find_related(user::Entity)
                         .one(&state.db)
                         .await
@@ -109,6 +110,7 @@ pub async fn check_authenticated(
     }
 }
 
+/// Gets the auth token from the headers, returns only the hex part, stripping off the `Bearer cfs_` prefix
 fn get_token(headers: &HeaderMap) -> Option<&str> {
     headers
         .get(AUTH_HEADER)?

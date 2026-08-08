@@ -44,6 +44,7 @@ pub async fn create_token(
         StatusCode::CREATED,
         Json(CreateTokenRes {
             token: format!("{}{}", ACCESS_TOKEN_PREFIX, token),
+            // if this panics, then the token_model response from the db was an error, but somehow our map_err try didnt catch it
             token_id: token_model.id.unwrap(),
         }),
     ))
