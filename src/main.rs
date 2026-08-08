@@ -1,4 +1,4 @@
-use std::{env, net::SocketAddr};
+use std::env;
 
 use axum::{Router, routing::get};
 use dotenvy::dotenv;
@@ -74,9 +74,6 @@ async fn main() {
         env::var("PORT").expect("PORT should be specifed in env")
     );
 
-
-    // NOTE: on windows [::] will NOT bind to both ipv4 and ipv6 for whatever reason microsoft decided
-    let addr: SocketAddr = addr.parse::<SocketAddr>().unwrap();
     info!("Server listening on {}", addr);
     axum::serve(TcpListener::bind(addr).await.unwrap(), app)
         .await
