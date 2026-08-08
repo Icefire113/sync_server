@@ -13,7 +13,7 @@ http:
         "username": "testy mc test face",
         "password": "password",
         "token_name": "testing token DO NOT DELETE!!!",
-        "duration_days": 10000
+        "duration_days": 100
       }
 
 settings:

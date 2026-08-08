@@ -13,4 +13,4 @@ settings:
   followRedirects: true
   maxRedirects: 5
 
-docs: Just responds with the currently running sync_server version
+docs: Just responds with the currently running sync_server version, also functions as a healthcheck to poke and see if the API is running

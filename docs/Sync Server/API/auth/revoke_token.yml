@@ -8,10 +8,13 @@ http:
   url: "{{BASE_URL}}/api/auth/revoke_token"
   body:
     type: json
-    data: "{\r\n  \"id\": 35\r\n}"
+    data: |-
+      {
+        "id": 32
+      }
   auth:
     type: bearer
-    token: ""
+    token: "{{TEST_AUTH_TOKEN}}"
 
 settings:
   encodeUrl: true
