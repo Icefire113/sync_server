@@ -1,4 +1,4 @@
-use std::env;
+use std::{env, net::SocketAddr};
 
 use axum::{Router, routing::get};
 use dotenvy::dotenv;
@@ -35,7 +35,12 @@ async fn main() {
                 .into()
             }),
         )
-        .with(tracing_subscriber::fmt::layer())
+        .with(
+            tracing_subscriber::fmt::layer()
+                .with_file(true)
+                .with_line_number(true)
+                .with_target(true),
+        )
         .try_init()
         .unwrap();
     dotenv().ok();
@@ -68,8 +73,11 @@ async fn main() {
         env::var("HOST").expect("HOST should be specifed in env"),
         env::var("PORT").expect("PORT should be specifed in env")
     );
-    info!("Server listening on {}", addr);
 
+
+    // NOTE: on windows [::] will NOT bind to both ipv4 and ipv6 for whatever reason microsoft decided
+    let addr: SocketAddr = addr.parse::<SocketAddr>().unwrap();
+    info!("Server listening on {}", addr);
     axum::serve(TcpListener::bind(addr).await.unwrap(), app)
         .await
         .unwrap();
