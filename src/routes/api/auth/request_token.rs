@@ -14,7 +14,7 @@ use crate::{
     middleware::auth::ACCESS_TOKEN_PREFIX,
     routes::types::{
         ApiResponse,
-        generic_internal_err::{InternalErrorCode, InternalErrorRes},
+        internal_err::{InternalErrorCode, InternalErrorRes},
         request_token::{RequestTokenReq, RequestTokenRes},
     },
     util::get_random_string_s,

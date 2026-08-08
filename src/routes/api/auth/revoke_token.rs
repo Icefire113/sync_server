@@ -8,7 +8,7 @@ use crate::{
     db::schema::{access_token, user},
     routes::types::{
         ApiResponse,
-        generic_internal_err::{InternalErrorCode, InternalErrorRes},
+        internal_err::{InternalErrorCode, InternalErrorRes},
         revoke_token::RevokeTokenReq,
     },
 };
@@ -18,7 +18,7 @@ pub async fn revoke_token(
     Extension(user): Extension<user::Model>,
     Json(req): Json<RevokeTokenReq>,
 ) -> ApiResponse<()> {
-    let mut token_model: access_token::Model = match access_token::Entity::find_by_id(req.id)
+    let token_model: access_token::Model = match access_token::Entity::find_by_id(req.id)
         .one(&state.db)
         .await
         .map_err(|e| {

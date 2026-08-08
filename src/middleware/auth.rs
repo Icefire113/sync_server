@@ -8,14 +8,14 @@ use axum::{
 use chrono::Utc;
 use sea_orm::{ColumnTrait, EntityTrait, ModelTrait, QueryFilter};
 use sha2::{Digest, Sha256};
-use tracing::{error, warn};
+use tracing::error;
 
 use crate::{
     AppState,
     db::schema::{access_token, user},
     routes::types::{
         ApiError,
-        generic_internal_err::{InternalErrorCode, InternalErrorRes},
+        internal_err::{InternalErrorCode, InternalErrorRes},
     },
 };
 

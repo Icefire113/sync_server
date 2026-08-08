@@ -21,8 +21,8 @@ impl InternalErrorRes {
                 InternalErrorCode::AccountNotEnabled => Some("Account not enabled".to_string()),
                 InternalErrorCode::TokenExpired => Some("Token expired".to_string()),
                 InternalErrorCode::TokenRevoked => Some("Token revoked".to_string()),
-                InternalErrorCode::BadRequest => Some("Bad request".to_string()),
                 InternalErrorCode::TokenNotFound => Some("Token not found".to_string()),
+                InternalErrorCode::BadRequest => Some("Bad request".to_string()),
                 InternalErrorCode::InternalError => Some("Internal error".to_string()),
                 InternalErrorCode::Forbidden => Some("Forbidden".to_string()),
                 InternalErrorCode::CannotRevokeAllTokens => {

@@ -15,7 +15,7 @@ use crate::{
     routes::types::{
         ApiResponse,
         create_user::{CreateUserReq, CreateUserRes},
-        generic_internal_err::{InternalErrorCode, InternalErrorRes},
+        internal_err::{InternalErrorCode, InternalErrorRes},
     },
     util::get_random_string_s,
 };

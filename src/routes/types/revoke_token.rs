@@ -3,5 +3,4 @@ pub struct RevokeTokenReq {
     pub id: i64,
 }
 
-#[derive(serde::Serialize, Debug)]
-pub struct RevokeTokenRes {}
+// No response, returns 204

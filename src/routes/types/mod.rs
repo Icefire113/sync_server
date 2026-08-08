@@ -1,10 +1,10 @@
 use axum::{Json, http::StatusCode};
 
-use crate::routes::types::generic_internal_err::InternalErrorRes;
+use crate::routes::types::internal_err::InternalErrorRes;
 
 pub mod create_token;
 pub mod create_user;
-pub mod generic_internal_err;
+pub mod internal_err;
 pub mod request_token;
 pub mod revoke_token;
 
