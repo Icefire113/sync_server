@@ -15,10 +15,7 @@ use tracing::error;
 use crate::{
     AppState,
     db::schema::{access_token, user},
-    routes::types::{
-        ApiError,
-        internal_err::{InternalErrorCode, InternalErrorRes},
-    },
+    routes::types::{ApiError, internal_err::InternalErrorCode},
 };
 
 const AUTH_HEADER: &str = "Authorization";
@@ -33,7 +30,7 @@ pub async fn check_enabled(
     if !user.enabled {
         Err((
             StatusCode::UNAUTHORIZED,
-            Json(InternalErrorRes::new(InternalErrorCode::AccountNotEnabled)),
+            Json(InternalErrorCode::AccountNotEnabled.into()),
         ))
     } else {
         Ok(next.run(req).await)
@@ -51,7 +48,7 @@ pub async fn check_user_role_atleast(
     } else {
         Err((
             StatusCode::FORBIDDEN,
-            Json(InternalErrorRes::new(InternalErrorCode::InsufficientRole)),
+            Json(InternalErrorCode::InsufficientRole.into()),
         ))
     }
 }
@@ -74,7 +71,7 @@ pub async fn check_authenticated(
                     error!("Error finding access token for auth {:?}", e);
                     (
                         StatusCode::INTERNAL_SERVER_ERROR,
-                        Json(InternalErrorRes::new(InternalErrorCode::InternalDBError)),
+                        Json(InternalErrorCode::InternalDBError.into()),
                     )
                 })? {
                 Some(tok) => {
@@ -82,7 +79,7 @@ pub async fn check_authenticated(
                     if tok.expires_at <= Utc::now() {
                         return Err((
                             StatusCode::UNAUTHORIZED,
-                            Json(InternalErrorRes::new(InternalErrorCode::TokenExpired)),
+                            Json(InternalErrorCode::TokenExpired.into()),
                         ));
                     }
                     // is the token revoked?
@@ -90,7 +87,7 @@ pub async fn check_authenticated(
                         if exp_time <= Utc::now() {
                             return Err((
                                 StatusCode::UNAUTHORIZED,
-                                Json(InternalErrorRes::new(InternalErrorCode::TokenRevoked)),
+                                Json(InternalErrorCode::TokenRevoked.into()),
                             ));
                         }
                     }
@@ -103,14 +100,14 @@ pub async fn check_authenticated(
                             error!("Error finding access token for auth {:?}", e);
                             (
                                 StatusCode::INTERNAL_SERVER_ERROR,
-                                Json(InternalErrorRes::new(InternalErrorCode::InternalDBError)),
+                                Json(InternalErrorCode::InternalDBError.into()),
                             )
                         })?
                         .ok_or_else(|| {
                             error!("Failed to find a user that we have a token for, user_id: {} token id: {}", tok.user_id, tok.id);
                             (
                             StatusCode::INTERNAL_SERVER_ERROR,
-                            Json(InternalErrorRes::new(InternalErrorCode::InternalError)),
+                            Json(InternalErrorCode::InternalError.into()),
                         )})?;
                     let mut tok: access_token::ActiveModel = tok.into();
                     tok.last_used_at = Set(Some(Utc::now()));
@@ -118,7 +115,7 @@ pub async fn check_authenticated(
                         error!("Error updating access token for auth {:?}", e);
                         (
                             StatusCode::INTERNAL_SERVER_ERROR,
-                            Json(InternalErrorRes::new(InternalErrorCode::InternalDBError)),
+                            Json(InternalErrorCode::InternalDBError.into()),
                         )
                     })?;
                     req.extensions_mut().insert(user);
@@ -126,13 +123,13 @@ pub async fn check_authenticated(
                 }
                 None => Err((
                     StatusCode::UNAUTHORIZED,
-                    Json(InternalErrorRes::new(InternalErrorCode::Unauthorized)),
+                    Json(InternalErrorCode::Unauthorized.into()),
                 )),
             }
         }
         None => Err((
             StatusCode::UNAUTHORIZED,
-            Json(InternalErrorRes::new(InternalErrorCode::Unauthorized)),
+            Json(InternalErrorCode::Unauthorized.into()),
         )),
     }
 }

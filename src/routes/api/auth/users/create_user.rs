@@ -15,7 +15,7 @@ use crate::{
     routes::types::{
         ApiResponse,
         create_user::{CreateUserReq, CreateUserRes},
-        internal_err::{InternalErrorCode, InternalErrorRes},
+        internal_err::InternalErrorCode,
     },
     util::get_random_string_s,
 };
@@ -27,12 +27,12 @@ pub async fn create_user(
     if input.username.len() < 1 {
         return Err((
             StatusCode::BAD_REQUEST,
-            Json(InternalErrorRes::new(InternalErrorCode::UsernameTooShort)),
+            Json(InternalErrorCode::UsernameTooShort.into()),
         ));
     } else if input.username.len() > 50 {
         return Err((
             StatusCode::BAD_REQUEST,
-            Json(InternalErrorRes::new(InternalErrorCode::UsernameTooLong)),
+            Json(InternalErrorCode::UsernameTooLong.into()),
         ));
     }
 
@@ -45,7 +45,7 @@ pub async fn create_user(
             Some(_) => {
                 return Err((
                     StatusCode::BAD_REQUEST,
-                    Json(InternalErrorRes::new(InternalErrorCode::UsernameTaken)),
+                    Json(InternalErrorCode::UsernameTaken.into()),
                 ));
             }
             None => {
@@ -55,7 +55,7 @@ pub async fn create_user(
                         error!("Error hashing access key: {:?}", e);
                         (
                             StatusCode::INTERNAL_SERVER_ERROR,
-                            Json(InternalErrorRes::new(InternalErrorCode::PasswordHash)),
+                            Json(InternalErrorCode::PasswordHash.into()),
                         )
                     })?
                     .to_string();
@@ -92,7 +92,7 @@ pub async fn create_user(
                         error!("Error creating user: {:?}", e);
                         (
                             StatusCode::INTERNAL_SERVER_ERROR,
-                            Json(InternalErrorRes::new(InternalErrorCode::InternalDBError)),
+                            Json(InternalErrorCode::InternalDBError.into()),
                         )
                     })?;
 
@@ -109,7 +109,7 @@ pub async fn create_user(
             error!("Error finding user: {:?}", e);
             return Err((
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(InternalErrorRes::new(InternalErrorCode::InternalDBError)),
+                Json(InternalErrorCode::InternalDBError.into()),
             ));
         }
     }

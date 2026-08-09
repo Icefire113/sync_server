@@ -9,10 +9,7 @@ use tracing::error;
 use crate::{
     AppState,
     db::schema::user,
-    routes::types::{
-        ApiResponse,
-        internal_err::{InternalErrorCode, InternalErrorRes},
-    },
+    routes::types::{ApiResponse, internal_err::InternalErrorCode},
 };
 
 pub async fn enable_user(
@@ -26,14 +23,14 @@ pub async fn enable_user(
             error!("Error finding user by id to enable {:?}", e);
             (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(InternalErrorRes::new(InternalErrorCode::InternalDBError)),
+                Json(InternalErrorCode::InternalDBError.into()),
             )
         })? {
         Some(m) => m,
         None => {
             return Err((
                 StatusCode::NOT_FOUND,
-                Json(InternalErrorRes::new(InternalErrorCode::NoSuchUserFound)),
+                Json(InternalErrorCode::NoSuchUserFound.into()),
             ));
         }
     };
@@ -41,7 +38,7 @@ pub async fn enable_user(
     if user_model.enabled {
         return Err((
             StatusCode::BAD_REQUEST,
-            Json(InternalErrorRes::new(InternalErrorCode::UserAlreadyEnabled)),
+            Json(InternalErrorCode::UserAlreadyEnabled.into()),
         ));
     }
 
@@ -52,7 +49,7 @@ pub async fn enable_user(
         error!("Error saving enabled user {:?}", e);
         (
             StatusCode::INTERNAL_SERVER_ERROR,
-            Json(InternalErrorRes::new(InternalErrorCode::InternalDBError)),
+            Json(InternalErrorCode::InternalDBError.into()),
         )
     })?;
 

@@ -2,13 +2,12 @@ use std::fmt::Display;
 
 #[derive(serde::Deserialize, serde::Serialize, Debug)]
 pub struct InternalErrorRes {
-    /// TODO: Move to enum
     pub code: String,
     pub error_detail: Option<String>,
 }
 
 impl InternalErrorRes {
-    pub fn new(code: InternalErrorCode) -> Self {
+    fn new(code: InternalErrorCode) -> Self {
         Self {
             code: code.to_string(),
             error_detail: match code {
@@ -36,6 +35,12 @@ impl InternalErrorRes {
                 _ => None,
             },
         }
+    }
+}
+
+impl From<InternalErrorCode> for InternalErrorRes {
+    fn from(value: InternalErrorCode) -> Self {
+        Self::new(value)
     }
 }
 

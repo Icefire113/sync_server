@@ -11,7 +11,7 @@ use crate::{
     routes::types::{
         ApiResponse,
         create_token::{CreateTokenReq, CreateTokenRes},
-        internal_err::{InternalErrorCode, InternalErrorRes},
+        internal_err::InternalErrorCode,
     },
     util::get_random_string_s,
 };
@@ -36,7 +36,7 @@ pub async fn create_token(
         error!("Error saving new token {:?}", e);
         (
             StatusCode::INTERNAL_SERVER_ERROR,
-            Json(InternalErrorRes::new(InternalErrorCode::InternalDBError)),
+            Json(InternalErrorCode::InternalDBError.into()),
         )
     })?;
 

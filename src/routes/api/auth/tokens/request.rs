@@ -14,7 +14,7 @@ use crate::{
     middleware::auth::ACCESS_TOKEN_PREFIX,
     routes::types::{
         ApiResponse,
-        internal_err::{InternalErrorCode, InternalErrorRes},
+        internal_err::InternalErrorCode,
         request_token::{RequestTokenReq, RequestTokenRes},
     },
     util::get_random_string_s,
@@ -31,7 +31,7 @@ pub async fn request_token(
             error!("Error finding user {:?}", e);
             (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(InternalErrorRes::new(InternalErrorCode::InternalDBError)),
+                Json(InternalErrorCode::InternalDBError.into()),
             )
         })? {
         Some(user) => user,
@@ -41,9 +41,7 @@ pub async fn request_token(
                 .hash_password(req.password.as_bytes(), &SaltString::generate(&mut OsRng));
             return Err((
                 StatusCode::BAD_REQUEST,
-                Json(InternalErrorRes::new(
-                    InternalErrorCode::InvalidUsernameOrPassword,
-                )),
+                Json(InternalErrorCode::InvalidUsernameOrPassword.into()),
             ));
         }
     };
@@ -57,22 +55,20 @@ pub async fn request_token(
                 );
                 (
                     StatusCode::BAD_REQUEST,
-                    Json(InternalErrorRes::new(InternalErrorCode::InvalidUsernameOrPassword)),
+                    Json(InternalErrorCode::InvalidUsernameOrPassword.into()),
                 )
             })?,
         )
         .map_err(|e| match e {
             argon2::password_hash::Error::Password => (
                 StatusCode::BAD_REQUEST,
-                Json(InternalErrorRes::new(
-                    InternalErrorCode::InvalidUsernameOrPassword,
-                )),
+                Json(InternalErrorCode::InvalidUsernameOrPassword.into()),
             ),
             e => {
                 error!("Error verifying password {:?}", e);
                 (
                     StatusCode::INTERNAL_SERVER_ERROR,
-                    Json(InternalErrorRes::new(InternalErrorCode::HashPasswordVerify)),
+                    Json(InternalErrorCode::HashPasswordVerify.into()),
                 )
             }
         })?;
@@ -92,7 +88,7 @@ pub async fn request_token(
         error!("Error saving new token {:?}", e);
         (
             StatusCode::INTERNAL_SERVER_ERROR,
-            Json(InternalErrorRes::new(InternalErrorCode::InternalDBError)),
+            Json(InternalErrorCode::InternalDBError.into()),
         )
     })?;
 

@@ -14,7 +14,7 @@ use crate::{
     routes::types::{
         ApiResponse,
         get_token_info::{GetTokenInfoReq, GetTokenInfoRes},
-        internal_err::{InternalErrorCode, InternalErrorRes},
+        internal_err::{InternalErrorCode},
     },
 };
 
@@ -26,7 +26,7 @@ pub async fn token_info(
 ) -> ApiResponse<Json<GetTokenInfoRes>> {
     let token: &str = req_params.token.strip_prefix(ACCESS_TOKEN_PREFIX).ok_or((
         StatusCode::BAD_REQUEST,
-        Json(InternalErrorRes::new(InternalErrorCode::BadRequest)),
+        Json(InternalErrorCode::BadRequest.into()),
     ))?;
     let token_hash = Sha256::digest(token.as_bytes()).to_vec();
 
@@ -39,14 +39,14 @@ pub async fn token_info(
             error!("Database error finding access token {:?}", e);
             (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(InternalErrorRes::new(InternalErrorCode::InternalDBError)),
+                Json(InternalErrorCode::InternalDBError.into()),
             )
         })? {
         Some(token) => token,
         None => {
             return Err((
                 StatusCode::NOT_FOUND,
-                Json(InternalErrorRes::new(InternalErrorCode::TokenNotFound)),
+                Json(InternalErrorCode::TokenNotFound.into()),
             ));
         }
     };

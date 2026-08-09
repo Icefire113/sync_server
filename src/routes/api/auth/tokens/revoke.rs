@@ -8,11 +8,7 @@ use tracing::error;
 use crate::{
     AppState,
     db::schema::{access_token, user},
-    routes::types::{
-        ApiResponse,
-        internal_err::{InternalErrorCode, InternalErrorRes},
-        revoke_token::RevokeTokenReq,
-    },
+    routes::types::{ApiResponse, internal_err::InternalErrorCode, revoke_token::RevokeTokenReq},
 };
 
 pub async fn revoke_token(
@@ -28,14 +24,14 @@ pub async fn revoke_token(
             error!("Error finding token by id {:?}", e);
             (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(InternalErrorRes::new(InternalErrorCode::InternalDBError)),
+                Json(InternalErrorCode::InternalDBError.into()),
             )
         })? {
         Some(token) => token,
         None => {
             return Err((
                 StatusCode::NOT_FOUND,
-                Json(InternalErrorRes::new(InternalErrorCode::TokenNotFound)),
+                Json(InternalErrorCode::TokenNotFound.into()),
             ));
         }
     };
@@ -43,9 +39,7 @@ pub async fn revoke_token(
     if token_model.revoked_at.is_some() {
         return Err((
             StatusCode::BAD_REQUEST,
-            Json(InternalErrorRes::new(
-                InternalErrorCode::TokenAlreadyRevoked,
-            )),
+            Json(InternalErrorCode::TokenAlreadyRevoked.into()),
         ));
     }
 
@@ -57,7 +51,7 @@ pub async fn revoke_token(
             error!("Error finding token by id {:?}", e);
             (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(InternalErrorRes::new(InternalErrorCode::InternalDBError)),
+                Json(InternalErrorCode::InternalDBError.into()),
             )
         })?;
 
@@ -71,9 +65,7 @@ pub async fn revoke_token(
     if num_non_revoked_tokens == 1 {
         return Err((
             StatusCode::BAD_REQUEST,
-            Json(InternalErrorRes::new(
-                InternalErrorCode::CannotRevokeAllTokens,
-            )),
+            Json(InternalErrorCode::CannotRevokeAllTokens.into()),
         ));
     }
 
@@ -83,7 +75,7 @@ pub async fn revoke_token(
         error!("Error finding token by id {:?}", e);
         (
             StatusCode::INTERNAL_SERVER_ERROR,
-            Json(InternalErrorRes::new(InternalErrorCode::InternalDBError)),
+            Json(InternalErrorCode::InternalDBError.into()),
         )
     })?;
 
