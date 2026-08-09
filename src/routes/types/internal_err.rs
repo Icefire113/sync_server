@@ -12,7 +12,7 @@ impl InternalErrorRes {
         Self {
             code: code.to_string(),
             error_detail: match code {
-                InternalErrorCode::NoSuchUserFoundError => Some("User not found".to_string()),
+                InternalErrorCode::NoSuchUserFound => Some("User not found".to_string()),
                 InternalErrorCode::UsernameTooShort => Some("Username too short".to_string()),
                 InternalErrorCode::UsernameTooLong => Some("Username too long".to_string()),
                 InternalErrorCode::FileAlreadyExists => Some("File already exists".to_string()),
@@ -32,6 +32,7 @@ impl InternalErrorRes {
                 InternalErrorCode::InvalidUsernameOrPassword => {
                     Some("Invalid username or password".to_string())
                 }
+                InternalErrorCode::UserAlreadyEnabled => Some("User already enabled".to_string()),
                 _ => None,
             },
         }
@@ -39,7 +40,7 @@ impl InternalErrorRes {
 }
 
 pub enum InternalErrorCode {
-    NoSuchUserFoundError,
+    NoSuchUserFound,
     InternalDBError,
     InternalError,
     PasswordHash,
@@ -58,12 +59,14 @@ pub enum InternalErrorCode {
     TokenAlreadyRevoked,
     InvalidUsernameOrPassword,
     HashPasswordVerify,
+    InsufficientRole,
+    UserAlreadyEnabled,
 }
 
 impl Display for InternalErrorCode {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::NoSuchUserFoundError => write!(f, "E0001"),
+            Self::NoSuchUserFound => write!(f, "E0001"),
             Self::InternalDBError => write!(f, "E0002"),
             Self::PasswordHash => write!(f, "E0003"),
             Self::UsernameTooShort => write!(f, "E0004"),
@@ -82,6 +85,8 @@ impl Display for InternalErrorCode {
             Self::TokenAlreadyRevoked => write!(f, "E0017"),
             Self::InvalidUsernameOrPassword => write!(f, "E0018"),
             Self::HashPasswordVerify => write!(f, "E0019"),
+            Self::InsufficientRole => write!(f, "E0020"),
+            Self::UserAlreadyEnabled => write!(f, "E0021"),
         }
     }
 }

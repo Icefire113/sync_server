@@ -40,6 +40,22 @@ pub async fn check_enabled(
     }
 }
 
+pub async fn check_user_role_atleast(
+    Extension(user): Extension<user::Model>,
+    Extension(required_role): Extension<user::Role>,
+    req: Request,
+    next: Next,
+) -> Result<Response, ApiError> {
+    if user.role >= required_role {
+        Ok(next.run(req).await)
+    } else {
+        Err((
+            StatusCode::FORBIDDEN,
+            Json(InternalErrorRes::new(InternalErrorCode::InsufficientRole)),
+        ))
+    }
+}
+
 pub async fn check_authenticated(
     State(state): State<AppState>,
     headers: HeaderMap,
