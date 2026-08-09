@@ -1,16 +1,16 @@
 info:
-  name: create_user
+  name: create
   type: http
   seq: 1
 
 http:
   method: POST
-  url: "{{BASE_URL}}/api/auth/create_user"
+  url: "{{BASE_URL}}/api/auth/users/create"
   body:
     type: json
     data: |-
       {
-        "username": "testy mc test face",
+        "username": "testy mc test face #6",
         "password": "password"
       }
 

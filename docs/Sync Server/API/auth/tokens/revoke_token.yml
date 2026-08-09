@@ -1,16 +1,16 @@
 info:
   name: revoke_token
   type: http
-  seq: 4
+  seq: 2
 
 http:
-  method: POST
-  url: "{{BASE_URL}}/api/auth/revoke_token"
+  method: PATCH
+  url: "{{BASE_URL}}/api/auth/tokens/revoke"
   body:
     type: json
     data: |-
       {
-        "id": 32
+        "id": 30
       }
   auth:
     type: bearer

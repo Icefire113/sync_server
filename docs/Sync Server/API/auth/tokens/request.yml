@@ -1,11 +1,11 @@
 info:
-  name: request_token
+  name: request
   type: http
-  seq: 3
+  seq: 2
 
 http:
   method: POST
-  url: "{{BASE_URL}}/api/auth/request_token"
+  url: "{{BASE_URL}}/api/auth/tokens/request"
   body:
     type: json
     data: |-

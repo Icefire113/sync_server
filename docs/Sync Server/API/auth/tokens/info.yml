@@ -1,11 +1,11 @@
 info:
-  name: token_info
+  name: info
   type: http
-  seq: 5
+  seq: 4
 
 http:
   method: GET
-  url: "{{BASE_URL}}/api/auth/token_info?token=cfs_something"
+  url: "{{BASE_URL}}/api/auth/tokens/info?token=cfs_something"
   params:
     - name: token
       value: cfs_something
