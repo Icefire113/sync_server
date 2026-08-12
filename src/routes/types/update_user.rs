@@ -1,6 +1,6 @@
 use chrono::{DateTime, Utc};
 
-use crate::db::schema::user;
+use entity::user;
 
 #[derive(Debug, serde::Deserialize)]
 pub struct UpdateUserReq {

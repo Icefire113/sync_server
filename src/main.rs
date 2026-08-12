@@ -6,6 +6,7 @@ use argon2::{
 };
 use axum::{Router, routing::get};
 use dotenvy::dotenv;
+use migration::MigratorTrait;
 use sea_orm::DatabaseConnection;
 use tokio::net::TcpListener;
 
@@ -61,11 +62,10 @@ async fn main() {
     let db: DatabaseConnection = db::establish_connection().await;
     db::is_db_conn_ok(&db).await;
 
-    db.get_schema_registry("sync_server::db::schema::*")
-        .sync(&db)
+    migration::Migrator::up(&db, None)
         .await
-        .expect("Failed to sync schema with database");
-    info!("DB schema synced");
+        .expect("Failed to run migrations");
+    info!("DB migrations applied");
 
     let admin_token_hash: String = match config.admin_token {
         Some(token) => PasswordHash::new(&token)

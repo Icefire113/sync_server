@@ -12,9 +12,10 @@ use sea_orm::{
 use sha2::{Digest, Sha256};
 use tracing::error;
 
+use entity::{access_token, user};
+
 use crate::{
     AppState,
-    db::schema::{access_token, user},
     routes::types::{ApiError, internal_err::InternalErrorCode},
 };
 

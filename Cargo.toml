@@ -3,7 +3,13 @@ name = "sync_server"
 version = "0.1.0"
 edition = "2024"
 
+[workspace]
+members = [".", "entity", "migration"]
+resolver = "2"
+
 [dependencies]
+entity = { path = "entity" }
+migration = { path = "migration" }
 axum = { version = "0.8.9", features = ["macros"] }
 tokio = { version = "1.53.1", features = ["full"] }
 tower = { version = "0.5.3", features = ["full"] }
@@ -18,8 +24,6 @@ sea-orm = { version = "2.0.1", features = [
     "with-json",
     "with-chrono",
     "with-uuid",
-    "schema-sync",
-    "entity-registry",
 ] }
 serde = { version = "1.0.229", features = ["derive"] }
 serde_json = { version = "1.0.151" }

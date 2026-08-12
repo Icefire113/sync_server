@@ -1,0 +1,20 @@
+[package]
+name = "entity"
+edition = "2024"
+version = "0.1.0"
+publish = false
+
+[lib]
+name = "entity"
+
+[dependencies]
+sea-orm = { version = "2.0.1", features = [
+    "macros",
+    "with-chrono",
+    "with-uuid",
+    "runtime-tokio-native-tls",
+    "sqlx-postgres",
+    "entity-registry",
+] }
+serde = { version = "1.0.229", features = ["derive"] }
+chrono = { version = "0.4.45", features = ["serde"] }

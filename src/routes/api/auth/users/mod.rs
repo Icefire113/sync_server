@@ -3,9 +3,10 @@ use axum::{
     routing::{delete, patch, post},
 };
 
+use entity::user::Role;
+
 use crate::{
     AppState,
-    db::schema::user::Role,
     middleware::auth::{check_authenticated, check_enabled, check_user_role_atleast},
     routes::api::auth::users::{
         create_user::create_user, delete_user::delete_user, update_user::update_user,

@@ -6,9 +6,10 @@ use axum::{
 use sea_orm::{ActiveModelTrait, EntityTrait};
 use tracing::error;
 
+use entity::user;
+
 use crate::{
     AppState,
-    db::schema::user,
     routes::types::{ApiResponse, internal_err::InternalErrorCode},
 };
 

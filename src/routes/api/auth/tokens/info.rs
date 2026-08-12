@@ -7,14 +7,15 @@ use sea_orm::{ColumnTrait, EntityTrait, QueryFilter};
 use sha2::{Digest, Sha256};
 use tracing::error;
 
+use entity::{access_token, user};
+
 use crate::{
     AppState,
-    db::schema::{access_token, user},
     middleware::auth::ACCESS_TOKEN_PREFIX,
     routes::types::{
         ApiResponse,
         get_token_info::{GetTokenInfoReq, GetTokenInfoRes},
-        internal_err::{InternalErrorCode},
+        internal_err::InternalErrorCode,
     },
 };
 

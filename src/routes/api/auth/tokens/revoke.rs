@@ -5,9 +5,10 @@ use sea_orm::{
 };
 use tracing::error;
 
+use entity::{access_token, user};
+
 use crate::{
     AppState,
-    db::schema::{access_token, user},
     routes::types::{ApiResponse, internal_err::InternalErrorCode, revoke_token::RevokeTokenReq},
 };
 

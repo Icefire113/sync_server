@@ -4,9 +4,10 @@ use sea_orm::{ActiveModelTrait, ActiveValue::Set};
 use sha2::{Digest, Sha256};
 use tracing::error;
 
+use entity::{access_token, user};
+
 use crate::{
     AppState,
-    db::schema::{access_token, user},
     middleware::auth::ACCESS_TOKEN_PREFIX,
     routes::types::{
         ApiResponse,

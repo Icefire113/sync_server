@@ -8,13 +8,11 @@ http:
   url: "{{BASE_URL}}/api/auth/tokens/create"
   body:
     type: json
-    data: "{\r
-
-      \  \"name\": \"\",\r
-
-      \  \"duration_days\": 100\r
-
-      }"
+    data: |-
+      {
+        "name": "TESTING TOKEN",
+        "duration_days": 10000
+      }
   auth:
     type: bearer
     token: "{{TEST_AUTH_TOKEN}}"
