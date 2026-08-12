@@ -3,18 +3,32 @@ pub mod user {
     use sea_orm::{ActiveValue::Set, entity::prelude::*};
 
     #[derive(
-        Debug, Clone, Copy, PartialEq, Default, DeriveActiveEnum, EnumIter, Eq, PartialOrd, Ord,
+        Debug,
+        Clone,
+        Copy,
+        PartialEq,
+        Default,
+        DeriveActiveEnum,
+        EnumIter,
+        Eq,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize,
     )]
     #[sea_orm(db_type = "Enum", enum_name = "userrole")]
     pub enum Role {
         #[sea_orm(string_value = "Banned")]
+        #[serde(rename = "Banned")]
         Banned = 0,
 
         #[sea_orm(string_value = "User")]
         #[default]
+        #[serde(rename = "User")]
         User = 1,
 
         #[sea_orm(string_value = "Admin")]
+        #[serde(rename = "Admin")]
         Admin = 2,
     }
 
@@ -65,7 +79,13 @@ pub mod access_token {
         #[sea_orm(indexed)]
         pub token_hash: Vec<u8>,
         pub user_id: i64,
-        #[sea_orm(belongs_to, from = "user_id", to = "id")]
+        #[sea_orm(
+            belongs_to,
+            from = "user_id",
+            to = "id",
+            on_delete = "Cascade",
+            on_update = "Cascade"
+        )]
         pub user: BelongsTo<super::user::Entity>,
         pub name: String,
         pub created_at: DateTime<Utc>,

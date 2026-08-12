@@ -1,0 +1,23 @@
+info:
+  name: delete
+  type: http
+  seq: 3
+
+http:
+  method: DELETE
+  url: "{{BASE_URL}}/api/auth/users/:id"
+  params:
+    - name: id
+      value: "3"
+      type: path
+  auth:
+    type: bearer
+    token: "{{TEST_AUTH_TOKEN}}"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+docs: Enables a user, requires that the authenticated user making the request has the role at least `Admin`

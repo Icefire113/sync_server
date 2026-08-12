@@ -1,15 +1,22 @@
 info:
-  name: enable
+  name: update
   type: http
   seq: 2
 
 http:
   method: PATCH
-  url: "{{BASE_URL}}/api/auth/users/enable/:id"
+  url: "{{BASE_URL}}/api/auth/users/:id"
   params:
     - name: id
       value: "2"
       type: path
+  body:
+    type: json
+    data: |-
+      {
+        "role": "User",
+        "enabled": true
+      }
   auth:
     type: bearer
     token: "{{TEST_AUTH_TOKEN}}"
