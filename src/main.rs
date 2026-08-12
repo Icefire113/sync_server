@@ -1,5 +1,6 @@
 use std::env;
 
+use anyhow::{Context, anyhow};
 use argon2::{
     Argon2, PasswordHash, PasswordHasher,
     password_hash::{SaltString, rand_core::OsRng},
@@ -34,7 +35,7 @@ struct AppState {
 }
 
 #[tokio::main]
-async fn main() {
+async fn main() -> anyhow::Result<()> {
     tracing_subscriber::registry()
         .with(
             tracing_subscriber::EnvFilter::try_from_default_env().unwrap_or_else(|_| {
@@ -57,19 +58,20 @@ async fn main() {
         .unwrap();
     dotenv().ok();
     info!("Starting sync_server ver: {}", env!("CARGO_PKG_VERSION"));
-    let config: Config = Config::create_if_not_exists().expect("Failed to create/ parse config");
+    let config: Config =
+        Config::create_if_not_exists().context(anyhow!("Failed to create/ parse config"))?;
 
     let db: DatabaseConnection = db::establish_connection().await;
     db::is_db_conn_ok(&db).await;
 
     migration::Migrator::up(&db, None)
         .await
-        .expect("Failed to run migrations");
+        .context(anyhow!("Failed to run db migrations"))?;
     info!("DB migrations applied");
 
     let admin_token_hash: String = match config.admin_token {
         Some(token) => PasswordHash::new(&token)
-            .expect("Failed to parse saved admin token hash")
+            .context(anyhow!("Failed to parse saved admin token hash"))?
             .to_string(),
         None => {
             let tok: String = util::get_random_string_s();
@@ -77,7 +79,7 @@ async fn main() {
             info!("Instnace admin token: {}", tok);
             Argon2::default()
                 .hash_password(tok.as_bytes(), &SaltString::generate(&mut OsRng))
-                .expect("Failed to hash admin token")
+                .context(anyhow!("Failed to hash generated admin token"))?
                 .to_string()
         }
     };
@@ -104,18 +106,20 @@ async fn main() {
     let addr = format!(
         "{}:{}",
         env::var("HOST").unwrap_or_else(|e| {
-            error!("Error getting HOST: {:?}, defaulting to 0.0.0.0", e);
+            error!(
+                "Error getting HOST from env: {:?}, defaulting to 0.0.0.0",
+                e
+            );
             "0.0.0.0".into()
         }),
         env::var("PORT").unwrap_or_else(|e| {
-            error!("Error getting PORT: {:?}, defaulting to 3000", e);
+            error!("Error getting PORT from env: {:?}, defaulting to 3000", e);
             "3000".into()
         })
     );
 
     info!("Server listening on {}", addr);
 
-    axum::serve(TcpListener::bind(addr).await.unwrap(), app)
-        .await
-        .unwrap();
+    axum::serve(TcpListener::bind(addr).await.unwrap(), app).await?;
+    Ok(())
 }

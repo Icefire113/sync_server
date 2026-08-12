@@ -1,21 +1,12 @@
 use std::{
     fs::File,
-    io::{self, Read, Write},
+    io::{Read, Write},
 };
 
-use thiserror::Error;
+use anyhow::{Context, anyhow};
 use tracing::info;
 
 const CONFIG_FILE_PATH: &str = "./config.json";
-
-#[derive(Error, Debug)]
-pub enum ConfigLoadError {
-    #[error("IO error: {0}")]
-    IoError(#[from] std::io::Error),
-
-    #[error("Serde error: {0}")]
-    SerdeError(#[from] serde_json::Error),
-}
 
 #[derive(Debug, Default, serde::Deserialize, serde::Serialize)]
 pub struct Config {
@@ -24,7 +15,7 @@ pub struct Config {
 }
 
 impl Config {
-    pub fn create_if_not_exists() -> Result<Self, ConfigLoadError> {
+    pub fn create_if_not_exists() -> anyhow::Result<Self> {
         match File::options()
             .read(true)
             .write(true)
@@ -40,15 +31,19 @@ impl Config {
                 Ok(cfg)
             }
             Err(e) if e.kind() == std::io::ErrorKind::AlreadyExists => Self::load(),
-            Err(e) => Err(io::Error::from(e).into()),
+            Err(e) => Err(anyhow!("IO error: {:?}", e)),
         }
     }
 
-    pub fn load() -> Result<Self, ConfigLoadError> {
+    pub fn load() -> anyhow::Result<Self> {
         info!("Loading saved config");
-        let mut file: File = File::options().read(true).open(CONFIG_FILE_PATH)?;
+        let mut file: File = File::options()
+            .read(true)
+            .open(CONFIG_FILE_PATH)
+            .context(anyhow!("Failed to open config file"))?;
         let mut buf: String = String::new();
-        file.read_to_string(&mut buf)?;
-        Ok(serde_json::from_str(&buf)?)
+        file.read_to_string(&mut buf)
+            .context(anyhow!("Failed to read config file to string"))?;
+        Ok(serde_json::from_str(&buf).context(anyhow!("Failed to parse config file"))?)
     }
 }
