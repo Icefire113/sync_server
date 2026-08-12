@@ -8,7 +8,10 @@ use sea_orm::{ActiveModelTrait, ActiveValue::Set, DbErr, TransactionTrait};
 use sha2::{Digest, Sha256};
 use tracing::error;
 
-use entity::{access_token, user};
+use entity::{
+    access_token,
+    user::{self, Model},
+};
 
 use crate::{
     AppState,
@@ -64,9 +67,9 @@ pub async fn create_user(
                 let username = input.username.clone();
                 let access_token = get_random_string_s();
                 let token_hash = Sha256::digest(&access_token).to_vec();
-                state
+                let user = state
                     .db
-                    .transaction::<_, (), DbErr>(|txn| {
+                    .transaction::<_, Model, DbErr>(|txn| {
                         Box::pin(async move {
                             let user = user::ActiveModel {
                                 username: Set(username),
@@ -85,7 +88,7 @@ pub async fn create_user(
                             .insert(txn)
                             .await?;
 
-                            Ok(())
+                            Ok(user)
                         })
                     })
                     .await
@@ -100,6 +103,7 @@ pub async fn create_user(
                 Ok((
                     StatusCode::CREATED,
                     Json(CreateUserRes {
+                        id: user.id,
                         username: input.username,
                         access_token: format!("{}{}", ACCESS_TOKEN_PREFIX, access_token),
                     }),

@@ -1,6 +1,6 @@
 use axum::{
     Extension, Router, middleware,
-    routing::{delete, patch, post},
+    routing::{delete, get, patch, post},
 };
 
 use entity::user::Role;
@@ -9,12 +9,14 @@ use crate::{
     AppState,
     middleware::auth::{check_authenticated, check_enabled, check_user_role_atleast},
     routes::api::auth::users::{
-        create_user::create_user, delete_user::delete_user, update_user::update_user,
+        create_user::create_user, delete_user::delete_user, get_user::get_user,
+        update_user::update_user,
     },
 };
 
 mod create_user;
 mod delete_user;
+mod get_user;
 mod update_user;
 
 pub fn build_users_router(state: AppState) -> Router<AppState> {
@@ -23,6 +25,17 @@ pub fn build_users_router(state: AppState) -> Router<AppState> {
         .route(
             "/{id}",
             delete(delete_user)
+                .route_layer(middleware::from_fn(check_user_role_atleast))
+                .layer(Extension(Role::Admin))
+                .route_layer(middleware::from_fn(check_enabled))
+                .route_layer(middleware::from_fn_with_state(
+                    state.clone(),
+                    check_authenticated,
+                )),
+        )
+        .route(
+            "/{id}",
+            get(get_user)
                 .route_layer(middleware::from_fn(check_user_role_atleast))
                 .layer(Extension(Role::Admin))
                 .route_layer(middleware::from_fn(check_enabled))

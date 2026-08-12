@@ -6,6 +6,7 @@ pub mod create_token;
 pub mod create_user;
 pub mod delete_user;
 pub mod get_token_info;
+pub mod get_user;
 pub mod internal_err;
 pub mod request_token;
 pub mod revoke_token;

@@ -1,14 +1,14 @@
 info:
-  name: delete
+  name: info
   type: http
-  seq: 4
+  seq: 5
 
 http:
-  method: DELETE
+  method: GET
   url: "{{BASE_URL}}/api/auth/users/:id"
   params:
     - name: id
-      value: "3"
+      value: "4"
       type: path
   auth:
     type: bearer
@@ -20,4 +20,4 @@ settings:
   followRedirects: true
   maxRedirects: 5
 
-docs: Enables a user, requires that the authenticated user making the request has the role at least `Admin`
+docs: Gets the information surrounding a token, must be authenticated as the same user as the token
