@@ -1,4 +1,4 @@
-use std::env;
+use std::{env, path::Path};
 
 use anyhow::{Context, anyhow};
 use argon2::{
@@ -61,6 +61,21 @@ async fn main() -> anyhow::Result<()> {
     let config: Config =
         Config::create_if_not_exists().context(anyhow!("Failed to create/ parse config"))?;
 
+    match config.storage_backend {
+        config::StorageBackend::Local(local_storage_config) => {
+            // ensure local storage dir exists, is writable, and is a directory
+            if !Path::new(&local_storage_config.path).try_exists()? {
+                return Err(anyhow!("Local storage dir does not exist"));
+            }
+            if !Path::new(&local_storage_config.path).is_dir() {
+                return Err(anyhow!("Local storage dir is not a directory"));
+            }
+        }
+        config::StorageBackend::S3(_s3_storage_config) => {
+            // TODO: Check if we can access the bucket, and read/ write to it
+        }
+    };
+
     let db: DatabaseConnection = db::establish_connection().await;
     db::is_db_conn_ok(&db).await;
 
@@ -87,6 +102,7 @@ async fn main() -> anyhow::Result<()> {
     let app_state: AppState = AppState {
         db,
         admin_token_hash,
+        // TODO: Construct storage provider object and shove it in app state
     };
 
     let app: Router<AppState> = Router::new()

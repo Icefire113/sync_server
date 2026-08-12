@@ -8,10 +8,55 @@ use tracing::info;
 
 const CONFIG_FILE_PATH: &str = "./config.json";
 
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct LocalStorageConfig {
+    /// The root directory of the local storage
+    pub path: String,
+}
+
+impl Default for LocalStorageConfig {
+    fn default() -> Self {
+        Self {
+            path: "./storage".to_string(),
+        }
+    }
+}
+
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+pub struct S3StorageConfig {
+    pub bucket: String,
+    pub region: Option<String>,
+    pub endpoint_url: Option<String>,
+}
+
+impl Default for S3StorageConfig {
+    fn default() -> Self {
+        Self {
+            bucket: "sync_server".to_string(),
+            region: Default::default(),
+            endpoint_url: Default::default(),
+        }
+    }
+}
+
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+#[serde(tag = "type", content = "config")]
+pub enum StorageBackend {
+    Local(LocalStorageConfig),
+    S3(S3StorageConfig),
+}
+
+impl Default for StorageBackend {
+    fn default() -> Self {
+        Self::Local(Default::default())
+    }
+}
+
 #[derive(Debug, Default, serde::Deserialize, serde::Serialize)]
 pub struct Config {
     pub log_http_requests: bool,
     pub admin_token: Option<String>,
+    pub storage_backend: StorageBackend,
 }
 
 impl Config {
