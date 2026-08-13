@@ -32,7 +32,7 @@ pub struct S3StorageConfig {
 impl Default for S3StorageConfig {
     fn default() -> Self {
         Self {
-            bucket: "sync_server".to_string(),
+            bucket: "sync-server".to_string(),
             region: Default::default(),
             endpoint_url: Default::default(),
         }

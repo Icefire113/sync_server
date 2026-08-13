@@ -1,10 +1,11 @@
-use std::{env, path::Path};
+use std::{env, path::Path, sync::Arc};
 
 use anyhow::{Context, anyhow};
 use argon2::{
     Argon2, PasswordHash, PasswordHasher,
     password_hash::{SaltString, rand_core::OsRng},
 };
+use aws_config::Region;
 use axum::{Router, routing::get};
 use dotenvy::dotenv;
 use migration::MigratorTrait;
@@ -20,18 +21,21 @@ use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 use crate::{
     config::Config,
     routes::api::{self},
+    storage::{StorageProvider, local::LocalStorage, s3::S3Storage},
 };
 
 mod config;
 mod db;
 mod middleware;
 mod routes;
+mod storage;
 mod util;
 
 #[derive(Debug, Clone)]
 struct AppState {
     pub db: DatabaseConnection,
     pub admin_token_hash: String,
+    pub storage: Arc<dyn StorageProvider>,
 }
 
 #[tokio::main]
@@ -61,7 +65,7 @@ async fn main() -> anyhow::Result<()> {
     let config: Config =
         Config::create_if_not_exists().context(anyhow!("Failed to create/ parse config"))?;
 
-    match config.storage_backend {
+    match &config.storage_backend {
         config::StorageBackend::Local(local_storage_config) => {
             // ensure local storage dir exists, is writable, and is a directory
             if !Path::new(&local_storage_config.path).try_exists()? {
@@ -71,8 +75,77 @@ async fn main() -> anyhow::Result<()> {
                 return Err(anyhow!("Local storage dir is not a directory"));
             }
         }
-        config::StorageBackend::S3(_s3_storage_config) => {
-            // TODO: Check if we can access the bucket, and read/ write to it
+        config::StorageBackend::S3(s3_storage_config) => {
+            let sdk_config: aws_config::SdkConfig = aws_config::from_env()
+                .endpoint_url(
+                    s3_storage_config
+                        .endpoint_url
+                        .clone()
+                        .context("Storage config must specify `endpoint_url` when using s3")?,
+                )
+                .region(Region::new(s3_storage_config.region.clone().context(
+                    "Storage config must specify `region` when using s3",
+                )?))
+                .load()
+                .await;
+
+            let s3_config = aws_sdk_s3::config::Builder::from(&sdk_config)
+                .force_path_style(true)
+                .build();
+
+            let s3_client = aws_sdk_s3::Client::from_conf(s3_config);
+            let bucket_name = s3_storage_config.bucket.clone();
+            s3_client
+                .head_bucket()
+                .bucket(&bucket_name)
+                .send()
+                .await
+                .context(anyhow!(
+                    "Failed to head bucket {bucket_name}, does it exist and do we have access to it?"
+                ))?;
+
+            let probe_key = format!(".probe/{}", uuid::Uuid::new_v4());
+            let probe_bytes = b"sync_server permission probe";
+            s3_client
+                .put_object()
+                .bucket(&bucket_name)
+                .key(&probe_key)
+                .body(aws_sdk_s3::primitives::ByteStream::from_static(probe_bytes))
+                .send()
+                .await
+                .context(anyhow!(
+                    "Failed to write probe object {probe_key}, do we have write access to bucket {bucket_name}?"
+                ))?;
+
+            let fetched = s3_client
+                .get_object()
+                .bucket(&bucket_name)
+                .key(&probe_key)
+                .send()
+                .await
+                .context(anyhow!(
+                    "Failed to read probe object {probe_key}, do we have read access to bucket {bucket_name}?"
+                ))?;
+            let fetched_bytes = fetched
+                .body
+                .collect()
+                .await
+                .context(anyhow!("Failed to read probe object body"))?
+                .into_bytes();
+            if fetched_bytes.as_ref() != probe_bytes {
+                return Err(anyhow!(
+                    "Probe object content did not match what was written"
+                ));
+            }
+
+            s3_client
+                .delete_object()
+                .bucket(&bucket_name)
+                .key(&probe_key)
+                .send()
+                .await
+                .context(anyhow!("Failed to delete probe object {probe_key}"))?;
+            info!("S3 storage backend ok, bucket {bucket_name} is accessible and writable");
         }
     };
 
@@ -102,7 +175,14 @@ async fn main() -> anyhow::Result<()> {
     let app_state: AppState = AppState {
         db,
         admin_token_hash,
-        // TODO: Construct storage provider object and shove it in app state
+        storage: match &config.storage_backend {
+            config::StorageBackend::Local(local_storage_config) => {
+                Arc::new(LocalStorage::new(local_storage_config)) as Arc<dyn StorageProvider>
+            }
+            config::StorageBackend::S3(s3_storage_config) => {
+                Arc::new(S3Storage::new(s3_storage_config).await) as Arc<dyn StorageProvider>
+            }
+        },
     };
 
     let app: Router<AppState> = Router::new()
