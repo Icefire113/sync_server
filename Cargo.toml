@@ -31,12 +31,12 @@ rand = { version = "0.10.2", features = ["serde"] }
 anyhow = { version = "1.0.104", features = ["backtrace"] }
 argon2 = { version = "0.5.3", features = ["std"] }
 chrono = { version = "0.4.45", features = ["serde"] }
-uuid = { version = "1.24.0", features = ["serde", "v4", "fast-rng"] }
+uuid = { version = "1.24.1", features = ["serde", "v4", "fast-rng"] }
 sha2 = "0.11.0"
 lazy_static = "1.5.0"
 async-trait = "0.1.92"
 thiserror = "2.0.20"
-aws-sdk-s3 = { version = "1.141.0", features = ["behavior-version-latest"] }
+aws-sdk-s3 = { version = "1.142.0", features = ["behavior-version-latest"] }
 aws-config = { version = "1.10.1", features = ["behavior-version-latest"] }
 
 [features]
