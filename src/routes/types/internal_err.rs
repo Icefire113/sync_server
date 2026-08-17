@@ -31,6 +31,9 @@ impl InternalErrorRes {
                 InternalErrorCode::InvalidUsernameOrPassword => {
                     Some("Invalid username or password".to_string())
                 }
+                InternalErrorCode::UsernameContainsInvalidChars => {
+                    Some("Username contains invalid characters".to_string())
+                }
                 _ => None,
             },
         }
@@ -64,6 +67,7 @@ pub enum InternalErrorCode {
     InvalidUsernameOrPassword,
     HashPasswordVerify,
     InsufficientRole,
+    UsernameContainsInvalidChars,
 }
 
 impl Display for InternalErrorCode {
@@ -89,6 +93,7 @@ impl Display for InternalErrorCode {
             Self::InvalidUsernameOrPassword => write!(f, "E0018"),
             Self::HashPasswordVerify => write!(f, "E0019"),
             Self::InsufficientRole => write!(f, "E0020"),
+            Self::UsernameContainsInvalidChars => write!(f, "E0021"),
         }
     }
 }

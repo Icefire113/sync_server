@@ -38,6 +38,15 @@ pub async fn create_user(
             StatusCode::BAD_REQUEST,
             Json(InternalErrorCode::UsernameTooLong.into()),
         ));
+    } else if !input
+        .username
+        .chars()
+        .all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_')
+    {
+        return Err((
+            StatusCode::BAD_REQUEST,
+            Json(InternalErrorCode::UsernameContainsInvalidChars.into()),
+        ));
     }
 
     // Check if username is taken
