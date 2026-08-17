@@ -1,5 +1,4 @@
 use axum::{
-    Json,
     extract::{Path, State},
     http::StatusCode,
 };
@@ -24,14 +23,14 @@ pub async fn delete_user(
             error!("Error finding user by id to delete {:?}", e);
             (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(InternalErrorCode::InternalDBError.into()),
+                InternalErrorCode::InternalDBError.into(),
             )
         })? {
         Some(m) => m,
         None => {
             return Err((
                 StatusCode::NOT_FOUND,
-                Json(InternalErrorCode::NoSuchUserFound.into()),
+                InternalErrorCode::NoSuchUserFound.into(),
             ));
         }
     }
@@ -41,7 +40,7 @@ pub async fn delete_user(
         error!("Error deleting user {:?}", e);
         (
             StatusCode::INTERNAL_SERVER_ERROR,
-            Json(InternalErrorCode::InternalDBError.into()),
+            InternalErrorCode::InternalDBError.into(),
         )
     })?;
 

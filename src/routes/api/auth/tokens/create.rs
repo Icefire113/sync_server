@@ -37,7 +37,7 @@ pub async fn create_token(
         error!("Error saving new token {:?}", e);
         (
             StatusCode::INTERNAL_SERVER_ERROR,
-            Json(InternalErrorCode::InternalDBError.into()),
+            InternalErrorCode::InternalDBError.into(),
         )
     })?;
 

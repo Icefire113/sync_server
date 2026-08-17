@@ -26,7 +26,7 @@ pub async fn get_user(
             None => {
                 return Err((
                     StatusCode::NOT_FOUND,
-                    Json(InternalErrorCode::NoSuchUserFound.into()),
+                    InternalErrorCode::NoSuchUserFound.into(),
                 ));
             }
         },
@@ -34,7 +34,7 @@ pub async fn get_user(
             error!("Error finding user by id {:?}", e);
             return Err((
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(InternalErrorCode::InternalDBError.into()),
+                InternalErrorCode::InternalDBError.into(),
             ));
         }
     };
@@ -44,7 +44,7 @@ pub async fn get_user(
         Json(GetUserRes {
             id: user.id,
             username: user.username,
-            role: user.role,
+            role: user.role.into(),
             created_at: user.created_at,
             enabled: user.enabled,
         }),

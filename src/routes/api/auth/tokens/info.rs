@@ -27,7 +27,7 @@ pub async fn token_info(
 ) -> ApiResponse<Json<GetTokenInfoRes>> {
     let token: &str = req_params.token.strip_prefix(ACCESS_TOKEN_PREFIX).ok_or((
         StatusCode::BAD_REQUEST,
-        Json(InternalErrorCode::BadRequest.into()),
+        InternalErrorCode::BadRequest.into(),
     ))?;
     let token_hash = Sha256::digest(token.as_bytes()).to_vec();
 
@@ -40,14 +40,14 @@ pub async fn token_info(
             error!("Database error finding access token {:?}", e);
             (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(InternalErrorCode::InternalDBError.into()),
+                InternalErrorCode::InternalDBError.into(),
             )
         })? {
         Some(token) => token,
         None => {
             return Err((
                 StatusCode::NOT_FOUND,
-                Json(InternalErrorCode::TokenNotFound.into()),
+                InternalErrorCode::TokenNotFound.into(),
             ));
         }
     };

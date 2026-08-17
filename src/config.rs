@@ -72,7 +72,7 @@ impl Config {
                 info!("Config file not found, creating");
                 let cfg = Self::default();
                 let str = serde_json::to_string(&cfg)?;
-                file.write(str.as_bytes())?;
+                file.write_all(str.as_bytes())?;
                 Ok(cfg)
             }
             Err(e) if e.kind() == std::io::ErrorKind::AlreadyExists => Self::load(),
@@ -89,6 +89,8 @@ impl Config {
         let mut buf: String = String::new();
         file.read_to_string(&mut buf)
             .context(anyhow!("Failed to read config file to string"))?;
-        Ok(serde_json::from_str(&buf).context(anyhow!("Failed to parse config file"))?)
+        let cfg: Self =
+            serde_json::from_str(&buf).context(anyhow!("Failed to parse config file"))?;
+        Ok(cfg)
     }
 }

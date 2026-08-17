@@ -28,15 +28,15 @@ pub async fn create_user(
     State(state): State<AppState>,
     Json(input): Json<CreateUserReq>,
 ) -> ApiResponse<Json<CreateUserRes>> {
-    if input.username.len() < 1 {
+    if input.username.is_empty() {
         return Err((
             StatusCode::BAD_REQUEST,
-            Json(InternalErrorCode::UsernameTooShort.into()),
+            InternalErrorCode::UsernameTooShort.into(),
         ));
     } else if input.username.len() > 50 {
         return Err((
             StatusCode::BAD_REQUEST,
-            Json(InternalErrorCode::UsernameTooLong.into()),
+            InternalErrorCode::UsernameTooLong.into(),
         ));
     } else if !input
         .username
@@ -45,7 +45,7 @@ pub async fn create_user(
     {
         return Err((
             StatusCode::BAD_REQUEST,
-            Json(InternalErrorCode::UsernameContainsInvalidChars.into()),
+            InternalErrorCode::UsernameContainsInvalidChars.into(),
         ));
     }
 
@@ -55,12 +55,10 @@ pub async fn create_user(
         .await
     {
         Ok(user) => match user {
-            Some(_) => {
-                return Err((
-                    StatusCode::BAD_REQUEST,
-                    Json(InternalErrorCode::UsernameTaken.into()),
-                ));
-            }
+            Some(_) => Err((
+                StatusCode::BAD_REQUEST,
+                InternalErrorCode::UsernameTaken.into(),
+            )),
             None => {
                 let hashed = Argon2::default()
                     .hash_password(input.password.as_bytes(), &SaltString::generate(&mut OsRng))
@@ -68,7 +66,7 @@ pub async fn create_user(
                         error!("Error hashing access key: {:?}", e);
                         (
                             StatusCode::INTERNAL_SERVER_ERROR,
-                            Json(InternalErrorCode::PasswordHash.into()),
+                            InternalErrorCode::PasswordHash.into(),
                         )
                     })?
                     .to_string();
@@ -105,7 +103,7 @@ pub async fn create_user(
                         error!("Error creating user: {:?}", e);
                         (
                             StatusCode::INTERNAL_SERVER_ERROR,
-                            Json(InternalErrorCode::InternalDBError.into()),
+                            InternalErrorCode::InternalDBError.into(),
                         )
                     })?;
 
@@ -121,10 +119,10 @@ pub async fn create_user(
         },
         Err(e) => {
             error!("Error finding user: {:?}", e);
-            return Err((
+            Err((
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(InternalErrorCode::InternalDBError.into()),
-            ));
+                InternalErrorCode::InternalDBError.into(),
+            ))
         }
     }
 }

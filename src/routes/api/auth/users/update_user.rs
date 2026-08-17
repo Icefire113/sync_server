@@ -29,14 +29,14 @@ pub async fn update_user(
             error!("Error finding user by id to update {:?}", e);
             (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(InternalErrorCode::InternalDBError.into()),
+                InternalErrorCode::InternalDBError.into(),
             )
         })? {
         Some(m) => m,
         None => {
             return Err((
                 StatusCode::NOT_FOUND,
-                Json(InternalErrorCode::NoSuchUserFound.into()),
+                InternalErrorCode::NoSuchUserFound.into(),
             ));
         }
     };
@@ -46,7 +46,7 @@ pub async fn update_user(
         user_model.enabled = Set(v);
     }
     if let Some(role) = req.role {
-        user_model.role = Set(role);
+        user_model.role = Set(role.into());
     }
 
     let user_model: user::Model = user_model
@@ -56,7 +56,7 @@ pub async fn update_user(
             error!("Error saving updating user {:?}", e);
             (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(InternalErrorCode::InternalDBError.into()),
+                InternalErrorCode::InternalDBError.into(),
             )
         })?
         .try_into_model()
@@ -67,7 +67,7 @@ pub async fn update_user(
             );
             (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(InternalErrorCode::InternalDBError.into()),
+                InternalErrorCode::InternalDBError.into(),
             )
         })?;
 
@@ -75,7 +75,7 @@ pub async fn update_user(
         StatusCode::OK,
         Json(UpdateUserRes {
             id: user_model.id,
-            role: user_model.role,
+            role: user_model.role.into(),
             username: user_model.username,
             enabled: user_model.enabled,
             created_at: user_model.created_at,

@@ -1,3 +1,4 @@
+use api_types::Role as ApiRole;
 use chrono::{DateTime, Utc};
 use sea_orm::{ActiveValue::Set, entity::prelude::*};
 use serde::{Deserialize, Serialize};
@@ -55,6 +56,26 @@ impl ActiveModelBehavior for ActiveModel {
             role: Set(Role::default()),
             created_at: Set(Utc::now()),
             ..ActiveModelTrait::default()
+        }
+    }
+}
+
+impl From<ApiRole> for Role {
+    fn from(value: ApiRole) -> Self {
+        match value {
+            ApiRole::Banned => Self::Banned,
+            ApiRole::User => Self::User,
+            ApiRole::Admin => Self::Admin,
+        }
+    }
+}
+
+impl From<Role> for ApiRole {
+    fn from(value: Role) -> Self {
+        match value {
+            Role::Banned => Self::Banned,
+            Role::User => Self::User,
+            Role::Admin => Self::Admin,
         }
     }
 }

@@ -46,6 +46,13 @@ impl From<InternalErrorCode> for InternalErrorRes {
     }
 }
 
+#[cfg(feature = "server")]
+impl axum::response::IntoResponse for InternalErrorRes {
+    fn into_response(self) -> axum::response::Response {
+        axum::Json(self).into_response()
+    }
+}
+
 pub enum InternalErrorCode {
     NoSuchUserFound,
     InternalDBError,

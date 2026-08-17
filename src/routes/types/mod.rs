@@ -1,19 +1,31 @@
-use axum::{Json, http::StatusCode};
+pub use api_types::*;
 
-use crate::routes::types::internal_err::InternalErrorRes;
+#[cfg(test)]
+mod tests {
+    use crate::routes::types::Role as ApiRole;
 
-pub mod create_token;
-pub mod create_user;
-pub mod delete_user;
-pub mod get_token_info;
-pub mod get_user;
-pub mod internal_err;
-pub mod request_token;
-pub mod revoke_token;
-pub mod update_user;
+    #[test]
+    fn api_role_matches_entity_role_serialization() {
+        for api in [ApiRole::Banned, ApiRole::User, ApiRole::Admin] {
+            let db = match api {
+                ApiRole::Banned => entity::user::Role::Banned,
+                ApiRole::User => entity::user::Role::User,
+                ApiRole::Admin => entity::user::Role::Admin,
+            };
+            assert_eq!(
+                serde_json::to_string(&api).unwrap(),
+                serde_json::to_string(&db).unwrap(),
+                "api_types::Role serialization diverged from entity::user::Role"
+            );
+        }
+    }
 
-/// The API response type for the entire api, either a success or an error with a status code and either a typed response, or an error response
-pub type ApiResponse<T> = Result<(StatusCode, T), ApiError>;
-
-/// The API error type
-pub type ApiError = (StatusCode, Json<InternalErrorRes>);
+    #[test]
+    fn api_role_round_trips_to_entity_role() {
+        for api in [ApiRole::Banned, ApiRole::User, ApiRole::Admin] {
+            let db: entity::user::Role = api.into();
+            let back: ApiRole = db.into();
+            assert_eq!(api, back);
+        }
+    }
+}

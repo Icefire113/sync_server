@@ -4,10 +4,11 @@ version = "0.1.0"
 edition = "2024"
 
 [workspace]
-members = [".", "entity", "migration"]
+members = [".", "api-types", "entity", "migration"]
 resolver = "2"
 
 [dependencies]
+api-types = { path = "api-types", features = ["server"] }
 entity = { path = "entity" }
 migration = { path = "migration" }
 axum = { version = "0.8.9", features = ["macros"] }
