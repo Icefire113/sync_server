@@ -1,6 +1,13 @@
+#[cfg(feature = "log-to-file")]
+use std::{fs::File, sync::Mutex};
+
 use std::fmt::Display;
 
+use anyhow::Context;
 use rand::{RngExt, SeedableRng, rng, rngs::StdRng};
+use tracing_subscriber::util::SubscriberInitExt;
+use tracing_subscriber::{EnvFilter, Layer};
+use tracing_subscriber::{fmt, layer::SubscriberExt};
 
 /// The number of bytes to generate for secure random strings (api keys, admin tokens, etc)
 const SECURE_RANDOM_SIZE: usize = 32;
@@ -33,4 +40,48 @@ impl Display for UpperCaseHexSlice<'_> {
         }
         Ok(())
     }
+}
+
+pub fn init_logging() -> anyhow::Result<()> {
+    #[cfg(feature = "log-to-file")]
+    let log_file = File::create("sync_server.log").context("Creating log files")?;
+
+    #[cfg(debug_assertions)]
+    let default_filter = format!(
+        "{}=trace,tower_http=debug,axum::rejection=trace",
+        env!("CARGO_CRATE_NAME")
+    );
+    #[cfg(not(debug_assertions))]
+    let default_filter = format!(
+        "{}=info,tower_http=debug,axum::rejection=trace",
+        env!("CARGO_CRATE_NAME")
+    );
+
+    let env_filter =
+        EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new(default_filter));
+
+    #[cfg(feature = "log-to-file")]
+    let file_layer = fmt::layer()
+        .with_file(true)
+        .with_target(false)
+        .with_line_number(true)
+        .with_ansi(false)
+        .with_writer(Mutex::new(log_file))
+        .with_filter(env_filter.clone());
+
+    let stderr_layer = fmt::layer()
+        .with_file(true)
+        .with_ansi(true)
+        .with_line_number(true)
+        .with_target(false)
+        .with_writer(std::io::stderr)
+        .with_filter(env_filter);
+
+    let registry: tracing_subscriber::Registry = tracing_subscriber::registry();
+    #[cfg(feature = "log-to-file")]
+    let registry = registry.with(file_layer);
+
+    let registry = registry.with(stderr_layer);
+    registry.try_init().context("init tracing")?;
+    Ok(())
 }

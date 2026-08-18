@@ -41,3 +41,7 @@ Enables compression of response bodies using one of the following encodings:
 - brotli
 - gzip
 - zstd
+
+### `log-to-file`
+
+Enables logging to `./sync_server.log` as well as to stderr
