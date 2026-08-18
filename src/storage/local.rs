@@ -26,6 +26,12 @@ impl LocalStorage {
 impl StorageProvider for LocalStorage {
     async fn put(&self, key: &str, bytes: &[u8]) -> Result<(), StorageError> {
         let object_path = self.root.join(key);
+
+        if let Some(parent) = object_path.parent() {
+            fs::create_dir_all(parent)
+                .map_err(|e| StorageError::internal("Failed to create parent directories", e))?;
+        }
+
         match File::options()
             .truncate(true)
             .write(true)
