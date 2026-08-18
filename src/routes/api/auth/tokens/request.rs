@@ -3,6 +3,7 @@ use argon2::{
     password_hash::{SaltString, rand_core::OsRng},
 };
 use axum::{Json, extract::State, http::StatusCode};
+use axum_extra::extract::WithRejection;
 use chrono::{Duration, Utc};
 use sea_orm::{ActiveModelTrait, ActiveValue::Set};
 use sha2::{Digest, Sha256};
@@ -14,7 +15,7 @@ use crate::{
     AppState,
     middleware::auth::ACCESS_TOKEN_PREFIX,
     routes::types::{
-        ApiResponse,
+        ApiError, ApiResponse,
         internal_err::InternalErrorCode,
         request_token::{RequestTokenReq, RequestTokenRes},
     },
@@ -23,7 +24,7 @@ use crate::{
 
 pub async fn request_token(
     State(state): State<AppState>,
-    Json(req): Json<RequestTokenReq>,
+    WithRejection(Json(req), _): WithRejection<Json<RequestTokenReq>, ApiError>,
 ) -> ApiResponse<Json<RequestTokenRes>> {
     let user_model = match user::Entity::find_by_username(req.username)
         .one(&state.db)
@@ -32,7 +33,7 @@ pub async fn request_token(
             error!("Error finding user {:?}", e);
             (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                InternalErrorCode::InternalDBError.into(),
+                InternalErrorCode::InternalDBError,
             )
         })? {
         Some(user) => user,
@@ -42,8 +43,9 @@ pub async fn request_token(
                 .hash_password(req.password.as_bytes(), &SaltString::generate(&mut OsRng));
             return Err((
                 StatusCode::BAD_REQUEST,
-                InternalErrorCode::InvalidUsernameOrPassword.into(),
-            ));
+                InternalErrorCode::InvalidUsernameOrPassword,
+            )
+                .into());
         }
     };
     Argon2::default()
@@ -56,20 +58,20 @@ pub async fn request_token(
                 );
                 (
                     StatusCode::BAD_REQUEST,
-                    InternalErrorCode::InvalidUsernameOrPassword.into(),
+                    InternalErrorCode::InvalidUsernameOrPassword,
                 )
             })?,
         )
         .map_err(|e| match e {
             argon2::password_hash::Error::Password => (
                 StatusCode::BAD_REQUEST,
-                InternalErrorCode::InvalidUsernameOrPassword.into(),
+                InternalErrorCode::InvalidUsernameOrPassword,
             ),
             e => {
                 error!("Error verifying password {:?}", e);
                 (
                     StatusCode::INTERNAL_SERVER_ERROR,
-                    InternalErrorCode::HashPasswordVerify.into(),
+                    InternalErrorCode::HashPasswordVerify,
                 )
             }
         })?;
@@ -89,7 +91,7 @@ pub async fn request_token(
         error!("Error saving new token {:?}", e);
         (
             StatusCode::INTERNAL_SERVER_ERROR,
-            InternalErrorCode::InternalDBError.into(),
+            InternalErrorCode::InternalDBError,
         )
     })?;
 

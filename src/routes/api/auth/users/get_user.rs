@@ -3,19 +3,20 @@ use axum::{
     extract::{Path, State},
     http::StatusCode,
 };
+use axum_extra::extract::WithRejection;
 use entity::user;
 use sea_orm::EntityTrait;
 use tracing::error;
 
 use crate::{
     AppState,
-    routes::types::{ApiResponse, get_user::GetUserRes, internal_err::InternalErrorCode},
+    routes::types::{ApiError, ApiResponse, get_user::GetUserRes, internal_err::InternalErrorCode},
 };
 
 #[axum::debug_handler]
 pub async fn get_user(
     State(state): State<AppState>,
-    Path(target_user_id): Path<i64>,
+    WithRejection(Path(target_user_id), _): WithRejection<Path<i64>, ApiError>,
 ) -> ApiResponse<Json<GetUserRes>> {
     let user = match user::Entity::find_by_id(target_user_id)
         .one(&state.db)
@@ -24,18 +25,16 @@ pub async fn get_user(
         Ok(user) => match user {
             Some(user) => user,
             None => {
-                return Err((
-                    StatusCode::NOT_FOUND,
-                    InternalErrorCode::NoSuchUserFound.into(),
-                ));
+                return Err((StatusCode::NOT_FOUND, InternalErrorCode::NoSuchUserFound).into());
             }
         },
         Err(e) => {
             error!("Error finding user by id {:?}", e);
             return Err((
                 StatusCode::INTERNAL_SERVER_ERROR,
-                InternalErrorCode::InternalDBError.into(),
-            ));
+                InternalErrorCode::InternalDBError,
+            )
+                .into());
         }
     };
 

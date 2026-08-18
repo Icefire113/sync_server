@@ -1,3 +1,6 @@
+#[cfg(feature = "server")]
+pub mod extract;
+
 pub mod create_token;
 pub mod create_user;
 pub mod delete_user;
@@ -11,7 +14,7 @@ pub mod update_user;
 
 use http::StatusCode;
 
-use crate::internal_err::InternalErrorRes;
+use crate::internal_err::{InternalErrorCode, InternalErrorRes};
 
 pub use role::Role;
 
@@ -19,4 +22,24 @@ pub use role::Role;
 pub type ApiResponse<T> = Result<(StatusCode, T), ApiError>;
 
 /// The API error type
-pub type ApiError = (StatusCode, InternalErrorRes);
+#[derive(Debug, Clone)]
+pub struct ApiError(pub StatusCode, pub InternalErrorRes);
+
+impl From<(StatusCode, InternalErrorRes)> for ApiError {
+    fn from((status, res): (StatusCode, InternalErrorRes)) -> Self {
+        Self(status, res)
+    }
+}
+
+impl From<(StatusCode, InternalErrorCode)> for ApiError {
+    fn from((status, code): (StatusCode, InternalErrorCode)) -> Self {
+        Self(status, code.into())
+    }
+}
+
+#[cfg(feature = "server")]
+impl axum::response::IntoResponse for ApiError {
+    fn into_response(self) -> axum::response::Response {
+        (self.0, self.1).into_response()
+    }
+}

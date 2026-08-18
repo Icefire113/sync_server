@@ -3,6 +3,7 @@ use axum::{
     extract::{Path, State},
     http::StatusCode,
 };
+use axum_extra::extract::WithRejection;
 use sea_orm::{ActiveModelTrait, ActiveValue::Set, EntityTrait, TryIntoModel};
 use tracing::error;
 
@@ -11,7 +12,7 @@ use entity::user;
 use crate::{
     AppState,
     routes::types::{
-        ApiResponse,
+        ApiError, ApiResponse,
         internal_err::InternalErrorCode,
         update_user::{UpdateUserReq, UpdateUserRes},
     },
@@ -19,8 +20,8 @@ use crate::{
 
 pub async fn update_user(
     State(state): State<AppState>,
-    Path(target_user_id): Path<i64>,
-    Json(req): Json<UpdateUserReq>,
+    WithRejection(Path(target_user_id), _): WithRejection<Path<i64>, ApiError>,
+    WithRejection(Json(req), _): WithRejection<Json<UpdateUserReq>, ApiError>,
 ) -> ApiResponse<Json<UpdateUserRes>> {
     let user_model: user::Model = match user::Entity::find_by_id(target_user_id)
         .one(&state.db)
@@ -29,15 +30,12 @@ pub async fn update_user(
             error!("Error finding user by id to update {:?}", e);
             (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                InternalErrorCode::InternalDBError.into(),
+                InternalErrorCode::InternalDBError,
             )
         })? {
         Some(m) => m,
         None => {
-            return Err((
-                StatusCode::NOT_FOUND,
-                InternalErrorCode::NoSuchUserFound.into(),
-            ));
+            return Err((StatusCode::NOT_FOUND, InternalErrorCode::NoSuchUserFound).into());
         }
     };
 
@@ -56,7 +54,7 @@ pub async fn update_user(
             error!("Error saving updating user {:?}", e);
             (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                InternalErrorCode::InternalDBError.into(),
+                InternalErrorCode::InternalDBError,
             )
         })?
         .try_into_model()
@@ -67,7 +65,7 @@ pub async fn update_user(
             );
             (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                InternalErrorCode::InternalDBError.into(),
+                InternalErrorCode::InternalDBError,
             )
         })?;
 

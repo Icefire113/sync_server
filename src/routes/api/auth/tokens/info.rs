@@ -3,6 +3,7 @@ use axum::{
     extract::{Query, State},
     http::StatusCode,
 };
+use axum_extra::extract::WithRejection;
 use sea_orm::{ColumnTrait, EntityTrait, QueryFilter};
 use sha2::{Digest, Sha256};
 use tracing::error;
@@ -13,7 +14,7 @@ use crate::{
     AppState,
     middleware::auth::ACCESS_TOKEN_PREFIX,
     routes::types::{
-        ApiResponse,
+        ApiError, ApiResponse,
         get_token_info::{GetTokenInfoReq, GetTokenInfoRes},
         internal_err::InternalErrorCode,
     },
@@ -23,11 +24,11 @@ use crate::{
 pub async fn token_info(
     State(state): State<AppState>,
     Extension(user): Extension<user::Model>,
-    req_params: Query<GetTokenInfoReq>,
+    WithRejection(Query(req_params), _): WithRejection<Query<GetTokenInfoReq>, ApiError>,
 ) -> ApiResponse<Json<GetTokenInfoRes>> {
     let token: &str = req_params.token.strip_prefix(ACCESS_TOKEN_PREFIX).ok_or((
         StatusCode::BAD_REQUEST,
-        InternalErrorCode::BadRequest.into(),
+        InternalErrorCode::InvalidTokenPrefix,
     ))?;
     let token_hash = Sha256::digest(token.as_bytes()).to_vec();
 
@@ -40,15 +41,12 @@ pub async fn token_info(
             error!("Database error finding access token {:?}", e);
             (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                InternalErrorCode::InternalDBError.into(),
+                InternalErrorCode::InternalDBError,
             )
         })? {
         Some(token) => token,
         None => {
-            return Err((
-                StatusCode::NOT_FOUND,
-                InternalErrorCode::TokenNotFound.into(),
-            ));
+            return Err((StatusCode::NOT_FOUND, InternalErrorCode::TokenNotFound).into());
         }
     };
 

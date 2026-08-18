@@ -1,6 +1,6 @@
 use std::fmt::Display;
 
-#[derive(serde::Deserialize, serde::Serialize, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Debug, Clone)]
 pub struct InternalErrorRes {
     pub code: String,
     pub error_detail: Option<String>,
@@ -8,34 +8,39 @@ pub struct InternalErrorRes {
 
 impl InternalErrorRes {
     fn new(code: InternalErrorCode) -> Self {
+        let error_detail = match &code {
+            InternalErrorCode::JsonRejection(d)
+            | InternalErrorCode::PathRejection(d)
+            | InternalErrorCode::QueryRejection(d) => Some(d.clone()),
+            InternalErrorCode::NoSuchUserFound => Some("User not found".to_string()),
+            InternalErrorCode::UsernameTooShort => Some("Username too short".to_string()),
+            InternalErrorCode::UsernameTooLong => Some("Username too long".to_string()),
+            InternalErrorCode::FileAlreadyExists => Some("File already exists".to_string()),
+            InternalErrorCode::UsernameTaken => Some("Username taken".to_string()),
+            InternalErrorCode::Unauthorized => Some("Unauthorized".to_string()),
+            InternalErrorCode::AccountNotEnabled => Some("Account not enabled".to_string()),
+            InternalErrorCode::TokenExpired => Some("Token expired".to_string()),
+            InternalErrorCode::TokenRevoked => Some("Token revoked".to_string()),
+            InternalErrorCode::TokenNotFound => Some("Token not found".to_string()),
+            InternalErrorCode::BadRequest => Some("Bad request".to_string()),
+            InternalErrorCode::InternalError => Some("Internal error".to_string()),
+            InternalErrorCode::Forbidden => Some("Forbidden".to_string()),
+            InternalErrorCode::CannotRevokeAllTokens => {
+                Some("You cannot revoke your last valid token".to_string())
+            }
+            InternalErrorCode::TokenAlreadyRevoked => Some("Token already revoked".to_string()),
+            InternalErrorCode::InvalidUsernameOrPassword => {
+                Some("Invalid username or password".to_string())
+            }
+            InternalErrorCode::UsernameContainsInvalidChars => {
+                Some("Username contains invalid characters".to_string())
+            }
+            _ => None,
+        };
+
         Self {
             code: code.to_string(),
-            error_detail: match code {
-                InternalErrorCode::NoSuchUserFound => Some("User not found".to_string()),
-                InternalErrorCode::UsernameTooShort => Some("Username too short".to_string()),
-                InternalErrorCode::UsernameTooLong => Some("Username too long".to_string()),
-                InternalErrorCode::FileAlreadyExists => Some("File already exists".to_string()),
-                InternalErrorCode::UsernameTaken => Some("Username taken".to_string()),
-                InternalErrorCode::Unauthorized => Some("Unauthorized".to_string()),
-                InternalErrorCode::AccountNotEnabled => Some("Account not enabled".to_string()),
-                InternalErrorCode::TokenExpired => Some("Token expired".to_string()),
-                InternalErrorCode::TokenRevoked => Some("Token revoked".to_string()),
-                InternalErrorCode::TokenNotFound => Some("Token not found".to_string()),
-                InternalErrorCode::BadRequest => Some("Bad request".to_string()),
-                InternalErrorCode::InternalError => Some("Internal error".to_string()),
-                InternalErrorCode::Forbidden => Some("Forbidden".to_string()),
-                InternalErrorCode::CannotRevokeAllTokens => {
-                    Some("You cannot revoke your last valid token".to_string())
-                }
-                InternalErrorCode::TokenAlreadyRevoked => Some("Token already revoked".to_string()),
-                InternalErrorCode::InvalidUsernameOrPassword => {
-                    Some("Invalid username or password".to_string())
-                }
-                InternalErrorCode::UsernameContainsInvalidChars => {
-                    Some("Username contains invalid characters".to_string())
-                }
-                _ => None,
-            },
+            error_detail,
         }
     }
 }
@@ -75,6 +80,10 @@ pub enum InternalErrorCode {
     HashPasswordVerify,
     InsufficientRole,
     UsernameContainsInvalidChars,
+    JsonRejection(String),
+    PathRejection(String),
+    QueryRejection(String),
+    InvalidTokenPrefix,
 }
 
 impl Display for InternalErrorCode {
@@ -101,6 +110,10 @@ impl Display for InternalErrorCode {
             Self::HashPasswordVerify => write!(f, "E0019"),
             Self::InsufficientRole => write!(f, "E0020"),
             Self::UsernameContainsInvalidChars => write!(f, "E0021"),
+            Self::JsonRejection(_) => write!(f, "E0022"),
+            Self::PathRejection(_) => write!(f, "E0023"),
+            Self::QueryRejection(_) => write!(f, "E0024"),
+            Self::InvalidTokenPrefix => write!(f, "E0025"),
         }
     }
 }

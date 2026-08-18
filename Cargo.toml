@@ -39,6 +39,7 @@ async-trait = "0.1.92"
 thiserror = "2.0.20"
 aws-sdk-s3 = { version = "1.142.0", features = ["behavior-version-latest"] }
 aws-config = { version = "1.10.1", features = ["behavior-version-latest"] }
+axum-extra = { version = "0.12.6", features = ["with-rejection"] }
 
 [features]
 response-compression = [

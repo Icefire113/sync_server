@@ -31,8 +31,9 @@ pub async fn check_enabled(
     if !user.enabled {
         Err((
             StatusCode::UNAUTHORIZED,
-            InternalErrorCode::AccountNotEnabled.into(),
-        ))
+            InternalErrorCode::AccountNotEnabled,
+        )
+            .into())
     } else {
         Ok(next.run(req).await)
     }
@@ -47,10 +48,7 @@ pub async fn check_user_role_atleast(
     if user.role >= required_role {
         Ok(next.run(req).await)
     } else {
-        Err((
-            StatusCode::FORBIDDEN,
-            InternalErrorCode::InsufficientRole.into(),
-        ))
+        Err((StatusCode::FORBIDDEN, InternalErrorCode::InsufficientRole).into())
     }
 }
 
@@ -72,25 +70,23 @@ pub async fn check_authenticated(
                     error!("Error finding access token for auth {:?}", e);
                     (
                         StatusCode::INTERNAL_SERVER_ERROR,
-                        InternalErrorCode::InternalDBError.into(),
+                        InternalErrorCode::InternalDBError,
                     )
                 })? {
                 Some(tok) => {
                     // is the token expired?
                     if tok.expires_at <= Utc::now() {
-                        return Err((
-                            StatusCode::UNAUTHORIZED,
-                            InternalErrorCode::TokenExpired.into(),
-                        ));
+                        return Err(
+                            (StatusCode::UNAUTHORIZED, InternalErrorCode::TokenExpired).into()
+                        );
                     }
                     // is the token revoked?
                     if let Some(exp_time) = tok.revoked_at
                         && exp_time <= Utc::now()
                     {
-                        return Err((
-                            StatusCode::UNAUTHORIZED,
-                            InternalErrorCode::TokenRevoked.into(),
-                        ));
+                        return Err(
+                            (StatusCode::UNAUTHORIZED, InternalErrorCode::TokenRevoked).into()
+                        );
                     }
                     // grab the user that the token is for
                     let user: user::Model = tok
@@ -101,14 +97,14 @@ pub async fn check_authenticated(
                             error!("Error finding access token for auth {:?}", e);
                             (
                                 StatusCode::INTERNAL_SERVER_ERROR,
-                                InternalErrorCode::InternalDBError.into(),
+                                InternalErrorCode::InternalDBError,
                             )
                         })?
                         .ok_or_else(|| {
                             error!("Failed to find a user that we have a token for, user_id: {} token id: {}", tok.user_id, tok.id);
                             (
                             StatusCode::INTERNAL_SERVER_ERROR,
-                            InternalErrorCode::InternalError.into(),
+                            InternalErrorCode::InternalError,
                         )})?;
                     let mut tok: access_token::ActiveModel = tok.into();
                     tok.last_used_at = Set(Some(Utc::now()));
@@ -116,22 +112,16 @@ pub async fn check_authenticated(
                         error!("Error updating access token for auth {:?}", e);
                         (
                             StatusCode::INTERNAL_SERVER_ERROR,
-                            InternalErrorCode::InternalDBError.into(),
+                            InternalErrorCode::InternalDBError,
                         )
                     })?;
                     req.extensions_mut().insert(user);
                     Ok(next.run(req).await)
                 }
-                None => Err((
-                    StatusCode::UNAUTHORIZED,
-                    InternalErrorCode::Unauthorized.into(),
-                )),
+                None => Err((StatusCode::UNAUTHORIZED, InternalErrorCode::Unauthorized).into()),
             }
         }
-        None => Err((
-            StatusCode::UNAUTHORIZED,
-            InternalErrorCode::Unauthorized.into(),
-        )),
+        None => Err((StatusCode::UNAUTHORIZED, InternalErrorCode::Unauthorized).into()),
     }
 }
 

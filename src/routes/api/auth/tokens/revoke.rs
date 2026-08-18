@@ -1,4 +1,5 @@
 use axum::{Extension, Json, extract::State, http::StatusCode};
+use axum_extra::extract::WithRejection;
 use chrono::Utc;
 use sea_orm::{
     ActiveModelTrait, ActiveValue::Set, ColumnTrait, EntityTrait, ModelTrait, QueryFilter,
@@ -9,13 +10,15 @@ use entity::{access_token, user};
 
 use crate::{
     AppState,
-    routes::types::{ApiResponse, internal_err::InternalErrorCode, revoke_token::RevokeTokenReq},
+    routes::types::{
+        ApiError, ApiResponse, internal_err::InternalErrorCode, revoke_token::RevokeTokenReq,
+    },
 };
 
 pub async fn revoke_token(
     State(state): State<AppState>,
     Extension(user): Extension<user::Model>,
-    Json(req): Json<RevokeTokenReq>,
+    WithRejection(Json(req), _): WithRejection<Json<RevokeTokenReq>, ApiError>,
 ) -> ApiResponse<()> {
     let token_model: access_token::Model = match access_token::Entity::find_by_id(req.id)
         .filter(access_token::Column::UserId.eq(user.id))
@@ -25,23 +28,21 @@ pub async fn revoke_token(
             error!("Error finding token by id {:?}", e);
             (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                InternalErrorCode::InternalDBError.into(),
+                InternalErrorCode::InternalDBError,
             )
         })? {
         Some(token) => token,
         None => {
-            return Err((
-                StatusCode::NOT_FOUND,
-                InternalErrorCode::TokenNotFound.into(),
-            ));
+            return Err((StatusCode::NOT_FOUND, InternalErrorCode::TokenNotFound).into());
         }
     };
 
     if token_model.revoked_at.is_some() {
         return Err((
             StatusCode::BAD_REQUEST,
-            InternalErrorCode::TokenAlreadyRevoked.into(),
-        ));
+            InternalErrorCode::TokenAlreadyRevoked,
+        )
+            .into());
     }
 
     let tokens = user
@@ -52,7 +53,7 @@ pub async fn revoke_token(
             error!("Error finding token by id {:?}", e);
             (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                InternalErrorCode::InternalDBError.into(),
+                InternalErrorCode::InternalDBError,
             )
         })?;
 
@@ -66,8 +67,9 @@ pub async fn revoke_token(
     if num_non_revoked_tokens == 1 {
         return Err((
             StatusCode::BAD_REQUEST,
-            InternalErrorCode::CannotRevokeAllTokens.into(),
-        ));
+            InternalErrorCode::CannotRevokeAllTokens,
+        )
+            .into());
     }
 
     let mut token_model: access_token::ActiveModel = token_model.into();
@@ -76,7 +78,7 @@ pub async fn revoke_token(
         error!("Error finding token by id {:?}", e);
         (
             StatusCode::INTERNAL_SERVER_ERROR,
-            InternalErrorCode::InternalDBError.into(),
+            InternalErrorCode::InternalDBError,
         )
     })?;
 

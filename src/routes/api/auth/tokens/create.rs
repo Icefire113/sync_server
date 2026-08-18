@@ -1,4 +1,5 @@
 use axum::{Extension, Json, extract::State, http::StatusCode};
+use axum_extra::extract::WithRejection;
 use chrono::{Duration, Utc};
 use sea_orm::{ActiveModelTrait, ActiveValue::Set};
 use sha2::{Digest, Sha256};
@@ -10,7 +11,7 @@ use crate::{
     AppState,
     middleware::auth::ACCESS_TOKEN_PREFIX,
     routes::types::{
-        ApiResponse,
+        ApiError, ApiResponse,
         create_token::{CreateTokenReq, CreateTokenRes},
         internal_err::InternalErrorCode,
     },
@@ -20,7 +21,7 @@ use crate::{
 pub async fn create_token(
     State(state): State<AppState>,
     Extension(user): Extension<user::Model>,
-    Json(req): Json<CreateTokenReq>,
+    WithRejection(Json(req), _): WithRejection<Json<CreateTokenReq>, ApiError>,
 ) -> ApiResponse<Json<CreateTokenRes>> {
     let token = get_random_string_s();
 
@@ -37,7 +38,7 @@ pub async fn create_token(
         error!("Error saving new token {:?}", e);
         (
             StatusCode::INTERNAL_SERVER_ERROR,
-            InternalErrorCode::InternalDBError.into(),
+            InternalErrorCode::InternalDBError,
         )
     })?;
 

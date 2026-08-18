@@ -3,6 +3,7 @@ use argon2::{
     password_hash::{SaltString, rand_core::OsRng},
 };
 use axum::{Json, extract::State, http::StatusCode};
+use axum_extra::extract::WithRejection;
 use chrono::Utc;
 use sea_orm::{ActiveModelTrait, ActiveValue::Set, DbErr, TransactionTrait};
 use sha2::{Digest, Sha256};
@@ -17,7 +18,7 @@ use crate::{
     AppState,
     middleware::auth::ACCESS_TOKEN_PREFIX,
     routes::types::{
-        ApiResponse,
+        ApiError, ApiResponse,
         create_user::{CreateUserReq, CreateUserRes},
         internal_err::InternalErrorCode,
     },
@@ -26,18 +27,12 @@ use crate::{
 
 pub async fn create_user(
     State(state): State<AppState>,
-    Json(input): Json<CreateUserReq>,
+    WithRejection(Json(input), _): WithRejection<Json<CreateUserReq>, ApiError>,
 ) -> ApiResponse<Json<CreateUserRes>> {
     if input.username.is_empty() {
-        return Err((
-            StatusCode::BAD_REQUEST,
-            InternalErrorCode::UsernameTooShort.into(),
-        ));
+        return Err((StatusCode::BAD_REQUEST, InternalErrorCode::UsernameTooShort).into());
     } else if input.username.len() > 50 {
-        return Err((
-            StatusCode::BAD_REQUEST,
-            InternalErrorCode::UsernameTooLong.into(),
-        ));
+        return Err((StatusCode::BAD_REQUEST, InternalErrorCode::UsernameTooLong).into());
     } else if !input
         .username
         .chars()
@@ -45,8 +40,9 @@ pub async fn create_user(
     {
         return Err((
             StatusCode::BAD_REQUEST,
-            InternalErrorCode::UsernameContainsInvalidChars.into(),
-        ));
+            InternalErrorCode::UsernameContainsInvalidChars,
+        )
+            .into());
     }
 
     // Check if username is taken
@@ -55,10 +51,7 @@ pub async fn create_user(
         .await
     {
         Ok(user) => match user {
-            Some(_) => Err((
-                StatusCode::BAD_REQUEST,
-                InternalErrorCode::UsernameTaken.into(),
-            )),
+            Some(_) => Err((StatusCode::BAD_REQUEST, InternalErrorCode::UsernameTaken).into()),
             None => {
                 let hashed = Argon2::default()
                     .hash_password(input.password.as_bytes(), &SaltString::generate(&mut OsRng))
@@ -66,7 +59,7 @@ pub async fn create_user(
                         error!("Error hashing access key: {:?}", e);
                         (
                             StatusCode::INTERNAL_SERVER_ERROR,
-                            InternalErrorCode::PasswordHash.into(),
+                            InternalErrorCode::PasswordHash,
                         )
                     })?
                     .to_string();
@@ -103,7 +96,7 @@ pub async fn create_user(
                         error!("Error creating user: {:?}", e);
                         (
                             StatusCode::INTERNAL_SERVER_ERROR,
-                            InternalErrorCode::InternalDBError.into(),
+                            InternalErrorCode::InternalDBError,
                         )
                     })?;
 
@@ -121,8 +114,9 @@ pub async fn create_user(
             error!("Error finding user: {:?}", e);
             Err((
                 StatusCode::INTERNAL_SERVER_ERROR,
-                InternalErrorCode::InternalDBError.into(),
-            ))
+                InternalErrorCode::InternalDBError,
+            )
+                .into())
         }
     }
 }
