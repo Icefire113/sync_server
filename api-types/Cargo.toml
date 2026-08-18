@@ -12,3 +12,4 @@ serde = { version = "1.0.229", features = ["derive"] }
 chrono = { version = "0.4.45", features = ["serde"] }
 http = "1"
 axum = { version = "0.8.9", optional = true }
+uuid = { version = "1.24.1", features = ["serde"] }

@@ -47,6 +47,7 @@ async fn main() -> anyhow::Result<()> {
 
     match &config.storage_backend {
         config::StorageBackend::Local(local_storage_config) => {
+            info!("Using local storage as file storage backend");
             // ensure local storage dir exists, is writable, and is a directory
             if !Path::new(&local_storage_config.path).try_exists()? {
                 return Err(anyhow!("Local storage dir does not exist"));
@@ -54,8 +55,10 @@ async fn main() -> anyhow::Result<()> {
             if !Path::new(&local_storage_config.path).is_dir() {
                 return Err(anyhow!("Local storage dir is not a directory"));
             }
+            info!("Local storage dir exists and is a directory");
         }
         config::StorageBackend::S3(s3_storage_config) => {
+            info!("Using s3 as file storage backend");
             let sdk_config: aws_config::SdkConfig = aws_config::from_env()
                 .endpoint_url(
                     s3_storage_config

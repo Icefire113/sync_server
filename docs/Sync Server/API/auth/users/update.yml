@@ -8,13 +8,13 @@ http:
   url: "{{BASE_URL}}/api/auth/users/:id"
   params:
     - name: id
-      value: "2"
+      value: "5"
       type: path
   body:
     type: json
     data: |-
       {
-        "role": "User",
+        "role": "Admin",
         "enabled": true
       }
   auth:

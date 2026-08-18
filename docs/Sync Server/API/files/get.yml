@@ -1,0 +1,19 @@
+info:
+  name: get
+  type: http
+  seq: 2
+
+http:
+  method: GET
+  url: "{{BASE_URL}}/api/files/:id"
+  params:
+    - name: id
+      value: 3ef93ded-0346-474e-9773-639e0adaaa67
+      type: path
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

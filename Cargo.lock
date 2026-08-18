@@ -142,6 +142,7 @@ dependencies = [
  "chrono",
  "http 1.4.0",
  "serde",
+ "uuid",
 ]
 
 [[package]]

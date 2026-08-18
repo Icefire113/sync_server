@@ -47,6 +47,8 @@ pub struct Model {
     pub created_at: DateTime<Utc>,
     #[sea_orm(has_many)]
     pub access_tokens: HasMany<crate::access_token::Entity>,
+    #[sea_orm(has_many)]
+    pub tracked_files: HasMany<crate::tracked_file::Entity>,
 }
 
 impl ActiveModelBehavior for ActiveModel {

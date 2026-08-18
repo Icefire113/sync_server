@@ -1,9 +1,11 @@
 #[cfg(feature = "server")]
 pub mod extract;
 
+pub mod create_file;
 pub mod create_token;
 pub mod create_user;
 pub mod delete_user;
+pub mod get_file;
 pub mod get_token_info;
 pub mod get_user;
 pub mod internal_err;

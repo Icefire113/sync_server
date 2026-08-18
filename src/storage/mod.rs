@@ -5,21 +5,6 @@ pub mod s3;
 
 #[derive(Debug, thiserror::Error)]
 pub enum StorageError {
-    #[error("Object not found: {0}")]
-    NotFound(String),
-
-    #[error("An object already exists at this key: {0}")]
-    AlreadyExists(String),
-
-    #[error("Permission denied accessing object: {0}")]
-    PermissionDenied(String),
-
-    #[error("Storage backend is unavailable: {0}")]
-    Unavailable(String),
-
-    #[error("Invalid object key: {0}")]
-    InvalidKey(String),
-
     #[error("Storage backend internal error: {0}")]
     Internal(String),
 }

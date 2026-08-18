@@ -35,6 +35,7 @@ impl InternalErrorRes {
             InternalErrorCode::UsernameContainsInvalidChars => {
                 Some("Username contains invalid characters".to_string())
             }
+            InternalErrorCode::FileNotFound => Some("File not found".to_string()),
             _ => None,
         };
 
@@ -84,6 +85,8 @@ pub enum InternalErrorCode {
     PathRejection(String),
     QueryRejection(String),
     InvalidTokenPrefix,
+    StorageBackendError,
+    FileNotFound,
 }
 
 impl Display for InternalErrorCode {
@@ -114,6 +117,8 @@ impl Display for InternalErrorCode {
             Self::PathRejection(_) => write!(f, "E0023"),
             Self::QueryRejection(_) => write!(f, "E0024"),
             Self::InvalidTokenPrefix => write!(f, "E0025"),
+            Self::StorageBackendError => write!(f, "E0026"),
+            Self::FileNotFound => write!(f, "E0027"),
         }
     }
 }
