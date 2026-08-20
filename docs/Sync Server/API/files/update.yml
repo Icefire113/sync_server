@@ -1,0 +1,31 @@
+info:
+  name: update
+  type: http
+  seq: 4
+
+http:
+  method: PATCH
+  url: "{{BASE_URL}}/api/files/:id"
+  params:
+    - name: id
+      value: bfc3dcfd-fc5a-4247-bcf9-680b14592055
+      type: path
+  body:
+    type: json
+    data: |-
+      {
+        "name": "asdf",
+        "update_contents": {
+          "file_bytes": [0,1,2,3,4,5],
+          "expected_hash": 2,
+          "hash": 3
+        },
+        "machine_name": "idk man"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

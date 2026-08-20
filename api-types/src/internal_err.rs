@@ -38,6 +38,8 @@ impl InternalErrorRes {
             InternalErrorCode::FileNotFound => Some("File not found".to_string()),
             InternalErrorCode::FileNotInStorage => Some("File not in storage".to_string()),
             InternalErrorCode::FileTooLarge => Some("File too large".to_string()),
+            InternalErrorCode::MismatchedFileHash => Some("Mismatched file hashes".to_string()),
+            InternalErrorCode::FileDeleted => Some("File deleted".to_string()),
             _ => None,
         };
 
@@ -91,6 +93,8 @@ pub enum InternalErrorCode {
     FileNotFound,
     FileNotInStorage,
     FileTooLarge,
+    MismatchedFileHash,
+    FileDeleted,
 }
 
 impl Display for InternalErrorCode {
@@ -125,6 +129,8 @@ impl Display for InternalErrorCode {
             Self::FileNotFound => write!(f, "E0027"),
             Self::FileNotInStorage => write!(f, "E0028"),
             Self::FileTooLarge => write!(f, "E0029"),
+            Self::MismatchedFileHash => write!(f, "E0030"),
+            Self::FileDeleted => write!(f, "E0031"),
         }
     }
 }

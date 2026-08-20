@@ -4,6 +4,7 @@ pub mod extract;
 pub mod create_file;
 pub mod create_token;
 pub mod create_user;
+pub mod delete_file;
 pub mod delete_user;
 pub mod get_file;
 pub mod get_token_info;
@@ -12,7 +13,10 @@ pub mod internal_err;
 pub mod request_token;
 pub mod revoke_token;
 pub mod role;
+pub mod update_file;
 pub mod update_user;
+
+use std::fmt::Display;
 
 use http::StatusCode;
 
@@ -26,6 +30,12 @@ pub type ApiResponse<T> = Result<(StatusCode, T), ApiError>;
 /// The API error type
 #[derive(Debug, Clone)]
 pub struct ApiError(pub StatusCode, pub InternalErrorRes);
+
+impl Display for ApiError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
 
 impl From<(StatusCode, InternalErrorRes)> for ApiError {
     fn from((status, res): (StatusCode, InternalErrorRes)) -> Self {

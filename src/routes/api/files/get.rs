@@ -69,6 +69,9 @@ pub async fn get_file_contents(
         Some(model) => model,
         None => return Err((StatusCode::NOT_FOUND, InternalErrorCode::FileNotFound).into()),
     };
+    if file_model.deleted_at.is_some() {
+        return Err((StatusCode::NOT_FOUND, InternalErrorCode::FileDeleted).into());
+    }
 
     let storage_key = format!("{}/{}", user.username, file_model.id);
 
