@@ -37,6 +37,7 @@ impl InternalErrorRes {
             }
             InternalErrorCode::FileNotFound => Some("File not found".to_string()),
             InternalErrorCode::FileNotInStorage => Some("File not in storage".to_string()),
+            InternalErrorCode::FileTooLarge => Some("File too large".to_string()),
             _ => None,
         };
 
@@ -89,6 +90,7 @@ pub enum InternalErrorCode {
     StorageBackendError,
     FileNotFound,
     FileNotInStorage,
+    FileTooLarge,
 }
 
 impl Display for InternalErrorCode {
@@ -122,6 +124,7 @@ impl Display for InternalErrorCode {
             Self::StorageBackendError => write!(f, "E0026"),
             Self::FileNotFound => write!(f, "E0027"),
             Self::FileNotInStorage => write!(f, "E0028"),
+            Self::FileTooLarge => write!(f, "E0029"),
         }
     }
 }

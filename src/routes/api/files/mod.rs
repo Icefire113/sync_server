@@ -1,6 +1,6 @@
 use axum::{
     Router, middleware,
-    routing::{get, post},
+    routing::{get, head, post},
 };
 
 use crate::{
@@ -24,7 +24,7 @@ pub fn build_files_router(state: AppState) -> Router<AppState> {
         )
         .route(
             "/{id}",
-            get(get::get_file_info)
+            head(get::get_file_info)
                 .route_layer(middleware::from_fn(check_enabled))
                 .route_layer(middleware::from_fn_with_state(
                     state.clone(),
@@ -32,7 +32,7 @@ pub fn build_files_router(state: AppState) -> Router<AppState> {
                 )),
         )
         .route(
-            "/{id}/contents",
+            "/{id}",
             get(get::get_file_contents)
                 .route_layer(middleware::from_fn(check_enabled))
                 .route_layer(middleware::from_fn_with_state(

@@ -34,6 +34,7 @@ mod util;
 struct AppState {
     pub db: DatabaseConnection,
     pub admin_token_hash: String,
+    pub max_file_size: u64,
     pub storage: Arc<dyn StorageProvider>,
 }
 
@@ -46,6 +47,10 @@ async fn main() -> anyhow::Result<()> {
     let config: Config =
         Config::create_if_not_exists().context(anyhow!("Failed to create/ parse config"))?;
 
+    info!(
+        "Max file size: {} (as bytes: {})",
+        config.max_file_size, config.max_file_size.0
+    );
     match &config.storage_backend {
         config::StorageBackend::Local(local_storage_config) => {
             info!("Using local storage as file storage backend");
@@ -159,6 +164,7 @@ async fn main() -> anyhow::Result<()> {
     let app_state: AppState = AppState {
         db,
         admin_token_hash,
+        max_file_size: config.max_file_size.0,
         storage: match &config.storage_backend {
             config::StorageBackend::Local(local_storage_config) => {
                 Arc::new(LocalStorage::new(local_storage_config)) as Arc<dyn StorageProvider>

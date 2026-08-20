@@ -5,7 +5,7 @@ info:
 
 http:
   method: GET
-  url: "{{BASE_URL}}/api/files/:id/contents"
+  url: "{{BASE_URL}}/api/files/:id"
   params:
     - name: id
       value: bfc3dcfd-fc5a-4247-bcf9-680b14592055

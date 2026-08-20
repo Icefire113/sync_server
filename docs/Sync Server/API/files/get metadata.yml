@@ -1,10 +1,10 @@
 info:
-  name: get
+  name: get metadata
   type: http
   seq: 2
 
 http:
-  method: GET
+  method: HEAD
   url: "{{BASE_URL}}/api/files/:id"
   params:
     - name: id

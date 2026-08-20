@@ -21,6 +21,14 @@ pub async fn create_file(
     let file_id = Uuid::new_v4();
     let storage_key = format!("{}/{}", user.username, file_id);
 
+    if req.file_bytes.len() as u64 > state.max_file_size {
+        return Err((
+            StatusCode::PAYLOAD_TOO_LARGE,
+            InternalErrorCode::FileTooLarge,
+        )
+            .into());
+    }
+
     state
         .storage
         .put(&storage_key, req.file_bytes)

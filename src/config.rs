@@ -4,6 +4,7 @@ use std::{
 };
 
 use anyhow::{Context, anyhow};
+use serde::Deserialize;
 use tracing::info;
 
 const CONFIG_FILE_PATH: &str = "./config.json";
@@ -52,10 +53,89 @@ impl Default for StorageBackend {
     }
 }
 
+/// A byte size that can be deserialized from a number (bytes) or a
+/// human-readable string such as `"1k"`, `"1M"`, `"1024k"`, `"1g"` (case-insensitive
+/// `b`/`k`/`m`/`g` suffixes; `k`=KiB, `m`=MiB, `g`=GiB).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+pub struct FileSize(pub u64);
+
+impl FileSize {
+    fn parse(s: &str) -> anyhow::Result<Self> {
+        let s = s.trim();
+        if s.is_empty() {
+            return Err(anyhow!("File size string is empty"));
+        }
+        let (num_part, mult) = match s.chars().last() {
+            Some(c) if c.is_ascii_alphabetic() => {
+                let (num, suf) = s.split_at(s.len() - 1);
+                let mult = match suf.to_ascii_lowercase().as_str() {
+                    "b" => 1u64,
+                    "k" => 1 << 10,
+                    "m" => 1 << 20,
+                    "g" => 1 << 30,
+                    _ => return Err(anyhow!("Invalid file size suffix: {:?}", suf)),
+                };
+                (num.trim(), mult)
+            }
+            _ => (s, 1u64),
+        };
+        let num: u64 = num_part
+            .parse()
+            .map_err(|_| anyhow!("Invalid file size number: {:?}", num_part))?;
+        let bytes = num
+            .checked_mul(mult)
+            .ok_or_else(|| anyhow!("File size overflows u64: {:?}", s))?;
+        Ok(Self(bytes))
+    }
+
+    fn to_human(&self) -> String {
+        const G: u64 = 1 << 30;
+        const M: u64 = 1 << 20;
+        const K: u64 = 1 << 10;
+        let v = self.0;
+        if v % G == 0 && v / G > 0 {
+            format!("{}g", v / G)
+        } else if v % M == 0 && v / M > 0 {
+            format!("{}m", v / M)
+        } else if v % K == 0 && v / K > 0 {
+            format!("{}k", v / K)
+        } else {
+            v.to_string()
+        }
+    }
+}
+
+impl Default for FileSize {
+    /// Defaults to 512KiB
+    fn default() -> Self {
+        Self(524288)
+    }
+}
+
+impl std::fmt::Display for FileSize {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.to_human())
+    }
+}
+
+impl<'de> serde::Deserialize<'de> for FileSize {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let s = <String as Deserialize>::deserialize(deserializer)?;
+        Self::parse(&s).map_err(serde::de::Error::custom)
+    }
+}
+
+impl serde::Serialize for FileSize {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serializer.serialize_str(&self.to_human())
+    }
+}
+
 #[derive(Debug, Default, serde::Deserialize, serde::Serialize)]
 pub struct Config {
     pub log_http_requests: bool,
     pub admin_token: Option<String>,
+    pub max_file_size: FileSize,
     pub storage_backend: StorageBackend,
 }
 
