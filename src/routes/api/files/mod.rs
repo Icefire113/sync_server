@@ -30,6 +30,15 @@ pub fn build_files_router(state: AppState) -> Router<AppState> {
                     state.clone(),
                     check_authenticated,
                 )),
+        )
+        .route(
+            "/{id}/contents",
+            get(get::get_file_contents)
+                .route_layer(middleware::from_fn(check_enabled))
+                .route_layer(middleware::from_fn_with_state(
+                    state.clone(),
+                    check_authenticated,
+                )),
         );
 
     files_router

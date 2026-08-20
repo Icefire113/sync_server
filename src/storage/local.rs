@@ -24,7 +24,7 @@ impl LocalStorage {
 
 #[async_trait::async_trait]
 impl StorageProvider for LocalStorage {
-    async fn put(&self, key: &str, bytes: &[u8]) -> Result<(), StorageError> {
+    async fn put(&self, key: &str, bytes: Vec<u8>) -> Result<(), StorageError> {
         let object_path = self.root.join(key);
 
         if let Some(parent) = object_path.parent() {
@@ -40,7 +40,7 @@ impl StorageProvider for LocalStorage {
             .open(object_path)
         {
             Ok(mut file) => file
-                .write_all(bytes)
+                .write_all(&bytes)
                 .map_err(|e| StorageError::internal("Failed to write to file", e)),
             Err(e) => Err(StorageError::internal("Failed to open file", e)),
         }
@@ -55,6 +55,7 @@ impl StorageProvider for LocalStorage {
                     .map_err(|e| StorageError::internal("Failed to read file", e))?;
                 Ok(bytes)
             }
+            Err(e) if e.kind() == std::io::ErrorKind::NotFound => Err(StorageError::NotFound),
             Err(e) => Err(StorageError::internal("Failed to open file", e)),
         }
     }

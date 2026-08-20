@@ -40,8 +40,9 @@ struct AppState {
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     util::init_logging()?;
-    dotenv().ok();
     info!("Starting sync_server ver: {}", env!("CARGO_PKG_VERSION"));
+    let env_path = dotenv()?;
+    info!("Loaded env from {}", env_path.display());
     let config: Config =
         Config::create_if_not_exists().context(anyhow!("Failed to create/ parse config"))?;
 

@@ -23,7 +23,7 @@ pub async fn create_file(
 
     state
         .storage
-        .put(&storage_key, &req.file_bytes)
+        .put(&storage_key, req.file_bytes)
         .await
         .map_err(|e| {
             error!("Error storing file {:?}", e);

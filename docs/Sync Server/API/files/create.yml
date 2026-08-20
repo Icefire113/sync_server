@@ -10,8 +10,8 @@ http:
     type: json
     data: |-
       {
-        "name": "test file",
-        "hash": 18446744073709551614,
+        "name": "some test file",
+        "hash": 1234,
         "file_bytes": [1,2,3,4,5,6,7,8],
         "machine_name": "idk man"
       }

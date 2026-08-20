@@ -36,6 +36,7 @@ impl InternalErrorRes {
                 Some("Username contains invalid characters".to_string())
             }
             InternalErrorCode::FileNotFound => Some("File not found".to_string()),
+            InternalErrorCode::FileNotInStorage => Some("File not in storage".to_string()),
             _ => None,
         };
 
@@ -87,6 +88,7 @@ pub enum InternalErrorCode {
     InvalidTokenPrefix,
     StorageBackendError,
     FileNotFound,
+    FileNotInStorage,
 }
 
 impl Display for InternalErrorCode {
@@ -119,6 +121,7 @@ impl Display for InternalErrorCode {
             Self::InvalidTokenPrefix => write!(f, "E0025"),
             Self::StorageBackendError => write!(f, "E0026"),
             Self::FileNotFound => write!(f, "E0027"),
+            Self::FileNotInStorage => write!(f, "E0028"),
         }
     }
 }

@@ -12,3 +12,5 @@ pub struct GetFileInfoRes {
     pub updated_at: DateTime<Utc>,
     pub deleted_at: Option<DateTime<Utc>>,
 }
+
+pub type GetFileContentRes = Vec<u8>;
