@@ -1,11 +1,15 @@
 use chrono::{DateTime, Utc};
 
-#[derive(serde::Deserialize, Debug)]
+#[cfg_attr(feature = "client", derive(serde::Serialize))]
+#[cfg_attr(feature = "server", derive(serde::Deserialize))]
+#[derive(Debug)]
 pub struct GetTokenInfoReq {
     pub token: String,
 }
 
-#[derive(serde::Serialize, Debug)]
+#[cfg_attr(feature = "client", derive(serde::Deserialize))]
+#[cfg_attr(feature = "server", derive(serde::Serialize))]
+#[derive(Debug)]
 pub struct GetTokenInfoRes {
     pub id: i64,
     pub name: String,

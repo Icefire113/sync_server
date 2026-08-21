@@ -24,6 +24,12 @@ use crate::internal_err::{InternalErrorCode, InternalErrorRes};
 
 pub use role::Role;
 
+#[cfg(not(any(feature = "server", feature = "client")))]
+compile_error!("You must enable either the `server` or `client` feature");
+
+#[cfg(all(feature = "server", feature = "client"))]
+compile_error!("You must enable only one of the `server` or `client` features");
+
 /// The API response type for the entire api, either a success or an error with a status code and either a typed response, or an error response
 pub type ApiResponse<T> = Result<(StatusCode, T), ApiError>;
 

@@ -3,7 +3,9 @@ use uuid::Uuid;
 
 // No request, file id is in path param
 
-#[derive(serde::Serialize, Debug)]
+#[cfg_attr(feature = "client", derive(serde::Deserialize))]
+#[cfg_attr(feature = "server", derive(serde::Serialize))]
+#[derive(Debug)]
 pub struct GetFileInfoRes {
     pub id: Uuid,
     pub name: String,

@@ -1,10 +1,13 @@
-// No request, info is in path param
 
 use chrono::{DateTime, Utc};
 
 use crate::role::Role;
 
-#[derive(serde::Serialize, Debug)]
+// No request, info is in path param
+
+#[cfg_attr(feature = "client", derive(serde::Deserialize))]
+#[cfg_attr(feature = "server", derive(serde::Serialize))]
+#[derive(Debug)]
 pub struct GetUserRes {
     pub id: i64,
     pub username: String,
