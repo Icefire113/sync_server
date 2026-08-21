@@ -1,0 +1,958 @@
+openapi: 3.0.0
+info:
+  title: sync_server API specifications
+  version: 0.1.0
+servers:
+  - url: http://localhost:3000
+    description: Local dev server
+tags:
+  - name: version
+    description: Server version and healthcheck
+  - name: files
+    description: Tracked file operations (authenticated)
+  - name: auth tokens
+    description: Access token management
+  - name: auth users
+    description: User management
+security:
+  - bearerAuth: []
+paths:
+  /version:
+    get:
+      summary: version
+      description: >-
+        Responds with the currently running sync_server version. Also functions
+        as a healthcheck to poke and see if the API is running.
+      operationId: version
+      tags:
+        - version
+      responses:
+        '200':
+          description: The running server version string
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: 0.1.0
+
+  /api/files:
+    post:
+      summary: Create tracked file
+      description: >-
+        Uploads a new tracked file blob and registers its metadata. The caller
+        must be authenticated and enabled.
+      operationId: create_file
+      tags:
+        - files
+      requestBody:
+        $ref: '#/components/requestBodies/CreateFile'
+      responses:
+        '201':
+          description: File created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateFileResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/files/{id}:
+    parameters:
+      - $ref: '#/components/parameters/FileId'
+    get:
+      summary: Get file contents
+      description: >-
+        Downloads the raw blob contents for a tracked file owned by the
+        authenticated user.
+      operationId: get_file_contents
+      tags:
+        - files
+      responses:
+        '200':
+          description: The raw file contents as a byte stream
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    delete:
+      summary: Delete file
+      description: >-
+        Soft-deletes a tracked file owned by the authenticated user, removing
+        its blob from storage.
+      operationId: delete_file
+      tags:
+        - files
+      responses:
+        '204':
+          description: File deleted successfully
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    patch:
+      summary: Update file
+      description: >-
+        Updates a tracked file's name and/or replaces its contents. If
+        `update_contents` is provided, `expected_hash` must match the current
+        stored hash.
+      operationId: update_file
+      tags:
+        - files
+      requestBody:
+        $ref: '#/components/requestBodies/UpdateFile'
+      responses:
+        '201':
+          description: File updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UpdateFileResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/files/{id}/info:
+    parameters:
+      - $ref: '#/components/parameters/FileId'
+    get:
+      summary: Get file metadata
+      description: >-
+        Gets the metadata for a tracked file owned by the authenticated user,
+        without downloading its contents.
+      operationId: get_file_info
+      tags:
+        - files
+      responses:
+        '200':
+          description: File metadata
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetFileInfoResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/auth/tokens/create:
+    post:
+      summary: Create access token
+      description: >-
+        Creates a new access token for the authenticated user with a given
+        duration in days.
+      operationId: create_token
+      tags:
+        - auth tokens
+      requestBody:
+        $ref: '#/components/requestBodies/CreateToken'
+      responses:
+        '201':
+          description: Token created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateTokenResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/auth/tokens/info:
+    get:
+      summary: Get token info
+      description: >-
+        Gets the information surrounding a token. Must be authenticated as the
+        same user the token belongs to.
+      operationId: token_info
+      tags:
+        - auth tokens
+      parameters:
+        - name: token
+          in: query
+          description: The `cfs_`-prefixed access token to inspect
+          required: true
+          schema:
+            type: string
+            example: cfs_something
+      responses:
+        '200':
+          description: Token information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetTokenInfoResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/auth/tokens/request:
+    post:
+      summary: Request access token
+      description: >-
+        Creates a new access token from a username and password, with a given
+        duration in days. Does not require an existing token.
+      operationId: request_token
+      tags:
+        - auth tokens
+      requestBody:
+        $ref: '#/components/requestBodies/RequestToken'
+      responses:
+        '201':
+          description: Token requested successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RequestTokenResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/auth/tokens/revoke:
+    patch:
+      summary: Revoke token
+      description: >-
+        Destroys a personal access token by its id, revoking it. The caller
+        cannot revoke their last remaining valid token.
+      operationId: revoke_token
+      tags:
+        - auth tokens
+      requestBody:
+        $ref: '#/components/requestBodies/RevokeToken'
+      responses:
+        '204':
+          description: Token revoked successfully
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/auth/users/create:
+    post:
+      summary: Create user
+      description: >-
+        Creates a new user with a given username and password, returning the
+        username as well as an initial access token valid for 1 year (365
+        days).
+      operationId: create_user
+      tags:
+        - auth users
+      requestBody:
+        $ref: '#/components/requestBodies/CreateUser'
+      responses:
+        '201':
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateUserResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/auth/users/{id}:
+    parameters:
+      - $ref: '#/components/parameters/UserId'
+    get:
+      summary: Get user info
+      description: >-
+        Gets information about a user. Requires the authenticated caller to
+        have the role at least `Admin`.
+      operationId: get_user
+      tags:
+        - auth users
+      responses:
+        '200':
+          description: User information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetUserResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    patch:
+      summary: Update user
+      description: >-
+        Updates a user's enabled state and/or role. Requires the authenticated
+        caller to have the role at least `Admin`.
+      operationId: update_user
+      tags:
+        - auth users
+      requestBody:
+        $ref: '#/components/requestBodies/UpdateUser'
+      responses:
+        '200':
+          description: User updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UpdateUserResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    delete:
+      summary: Delete user
+      description: >-
+        Deletes a user. Requires the authenticated caller to have the role at
+        least `Admin`.
+      operationId: delete_user
+      tags:
+        - auth users
+      responses:
+        '204':
+          description: User deleted successfully
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: >-
+        Access token obtained via `POST /api/auth/tokens/request` or
+        `POST /api/auth/tokens/create`. Tokens are prefixed with `cfs_`.
+  parameters:
+    FileId:
+      name: id
+      in: path
+      description: The UUID of the tracked file
+      required: true
+      schema:
+        type: string
+        format: uuid
+      example: bfc3dcfd-fc5a-4247-bcf9-680b14592055
+    UserId:
+      name: id
+      in: path
+      description: The ID of the user
+      required: true
+      schema:
+        type: integer
+        format: int64
+      example: 3
+  requestBodies:
+    CreateFile:
+      description: Metadata and contents of the new file
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/CreateFileRequest'
+    UpdateFile:
+      description: The fields to update for the file
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/UpdateFileRequest'
+    CreateToken:
+      description: Name and lifetime of the new token
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/CreateTokenRequest'
+    RequestToken:
+      description: Credentials and token options for requesting a new token
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/RequestTokenRequest'
+    RevokeToken:
+      description: The id of the token to revoke
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/RevokeTokenRequest'
+    CreateUser:
+      description: Credentials for the new user
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/CreateUserRequest'
+    UpdateUser:
+      description: The fields to update for the user
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/UpdateUserRequest'
+  responses:
+    BadRequest:
+      description: The request was malformed or failed validation
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+          examples:
+            InvalidJson:
+              summary: Invalid JSON body
+              value:
+                code: E0022
+                error_detail: Expected a closing delimiter
+            InvalidUsernameOrPassword:
+              summary: Invalid credentials
+              value:
+                code: E0018
+                error_detail: Invalid username or password
+            UsernameTaken:
+              summary: Username already taken
+              value:
+                code: E0007
+                error_detail: Username taken
+            TokenAlreadyRevoked:
+              summary: Token already revoked
+              value:
+                code: E0017
+                error_detail: Token already revoked
+    Unauthorized:
+      description: Missing/invalid credentials, expired/revoked token, or disabled account
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+          examples:
+            MissingToken:
+              summary: Missing or invalid token
+              value:
+                code: E0008
+                error_detail: Unauthorized
+            TokenExpired:
+              summary: Token expired
+              value:
+                code: E0011
+                error_detail: Token expired
+            TokenRevoked:
+              summary: Token revoked
+              value:
+                code: E0012
+                error_detail: Token revoked
+            AccountNotEnabled:
+              summary: Account disabled
+              value:
+                code: E0009
+                error_detail: Account not enabled
+    Forbidden:
+      description: The caller lacks the required role
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+          example:
+            code: E0020
+            error_detail: Forbidden
+    NotFound:
+      description: The requested resource does not exist
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+          examples:
+            FileNotFound:
+              summary: File not found
+              value:
+                code: E0027
+                error_detail: File not found
+            FileDeleted:
+              summary: File soft-deleted
+              value:
+                code: E0031
+                error_detail: File deleted
+            TokenNotFound:
+              summary: Token not found
+              value:
+                code: E0014
+                error_detail: Token not found
+            UserNotFound:
+              summary: User not found
+              value:
+                code: E0001
+                error_detail: User not found
+    Conflict:
+      description: The request conflicts with the current state of the resource
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+          example:
+            code: E0030
+            error_detail: Mismatched file hashes
+    PayloadTooLarge:
+      description: The request payload exceeds the configured maximum file size
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+          example:
+            code: E0029
+            error_detail: File too large
+    InternalServerError:
+      description: An unexpected error occurred on the server
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+          examples:
+            InternalDb:
+              summary: Internal database error
+              value:
+                code: E0002
+                error_detail: null
+            StorageBackend:
+              summary: Storage backend error
+              value:
+                code: E0026
+                error_detail: null
+            Internal:
+              summary: Generic internal error
+              value:
+                code: E0013
+                error_detail: Internal error
+  schemas:
+    Role:
+      type: string
+      description: User role. Higher values grant more permissions.
+      enum:
+        - Banned
+        - User
+        - Admin
+      default: User
+    ApiError:
+      type: object
+      description: A machine-readable error response
+      required:
+        - code
+      properties:
+        code:
+          type: string
+          description: Machine-readable error code, e.g. `E0008`
+          example: E0008
+        error_detail:
+          type: string
+          nullable: true
+          description: Optional human-readable detail for the error
+          example: Unauthorized
+
+    CreateFileRequest:
+      type: object
+      description: Request body for creating a tracked file
+      required:
+        - name
+        - hash
+        - file_bytes
+        - machine_name
+      properties:
+        name:
+          type: string
+          description: Display name of the file
+        hash:
+          type: integer
+          format: uint64
+          description: Hash of the file contents
+        file_bytes:
+          type: array
+          description: Raw file contents
+          items:
+            type: integer
+            format: uint8
+            minimum: 0
+            maximum: 255
+        machine_name:
+          type: string
+          description: The machine that is creating this file
+      example:
+        name: some test file
+        hash: 1234
+        file_bytes: [1,2,3,4,5]
+        machine_name: idk man
+    CreateFileResponse:
+      type: object
+      description: The id of the newly created file
+      required:
+        - id
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: The id of the created file
+
+    GetFileInfoResponse:
+      type: object
+      description: Metadata for a tracked file
+      required:
+        - id
+        - name
+        - hash
+        - last_updated_from
+        - updated_at
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        hash:
+          type: integer
+          format: uint64
+          description: Hash of the file contents
+        last_updated_from:
+          type: string
+          description: The machine that last updated the file
+        updated_at:
+          type: string
+          format: date-time
+          description: When the file was last updated
+        deleted_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: When the file was soft-deleted, if ever
+
+    UpdateContents:
+      type: object
+      description: New file contents and hashes for an update
+      required:
+        - file_bytes
+        - expected_hash
+        - hash
+      properties:
+        file_bytes:
+          type: array
+          description: New raw file contents
+          items:
+            type: integer
+            format: uint8
+            minimum: 0
+            maximum: 255
+        expected_hash:
+          type: integer
+          format: uint64
+          description: The currently stored hash, must match to apply the update
+        hash:
+          type: integer
+          format: uint64
+          description: The hash of the new contents
+    UpdateFileRequest:
+      type: object
+      description: The partial update to apply to a tracked file
+      required:
+        - machine_name
+      properties:
+        name:
+          type: string
+          description: New display name for the file
+        machine_name:
+          type: string
+          description: The machine performing the update
+        update_contents:
+          $ref: '#/components/schemas/UpdateContents'
+      example:
+        name: asdf
+        update_contents:
+          file_bytes: [1,2,3,4]
+          expected_hash: 2
+          hash: 3
+        machine_name: idk man
+    UpdateFileResponse:
+      type: object
+      description: The resulting state of the updated file
+      required:
+        - name
+        - hash
+        - machine_name
+        - updated_at
+      properties:
+        name:
+          type: string
+        hash:
+          type: integer
+          format: uint64
+        machine_name:
+          type: string
+        updated_at:
+          type: string
+          format: date-time
+
+    CreateTokenRequest:
+      type: object
+      description: Name and lifetime for a new access token
+      required:
+        - name
+        - duration_days
+      properties:
+        name:
+          type: string
+          description: Human-readable name for the token
+        duration_days:
+          type: integer
+          format: int32
+          minimum: 0
+          description: Lifetime of the token in days
+      example:
+        name: TESTING TOKEN
+        duration_days: 10000
+    CreateTokenResponse:
+      type: object
+      description: A newly created access token
+      required:
+        - token
+        - token_id
+      properties:
+        token:
+          type: string
+          description: The full access token, prefixed with `cfs_`
+          example: cfs_something
+        token_id:
+          type: integer
+          format: int64
+          description: The database id of the created token
+
+    RequestTokenRequest:
+      type: object
+      description: Credentials and options for requesting a new token
+      required:
+        - username
+        - password
+        - token_name
+        - duration_days
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+          format: password
+        token_name:
+          type: string
+          description: Human-readable name for the new token
+        duration_days:
+          type: integer
+          format: int32
+          minimum: 0
+          description: Lifetime of the token in days
+      example:
+        username: testy mc test face
+        password: password
+        token_name: testing token DO NOT DELETE!!!
+        duration_days: 100
+    RequestTokenResponse:
+      type: object
+      description: A newly requested access token
+      required:
+        - token
+        - token_id
+      properties:
+        token:
+          type: string
+          description: The full access token, prefixed with `cfs_`
+          example: cfs_something
+        token_id:
+          type: integer
+          format: int64
+          description: The database id of the created token
+
+    RevokeTokenRequest:
+      type: object
+      description: The id of the token to revoke
+      required:
+        - id
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: The database id of the token to revoke
+      example:
+        id: 1
+
+    GetTokenInfoResponse:
+      type: object
+      description: Information about an access token
+      required:
+        - id
+        - name
+        - created_at
+        - expires_at
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        expires_at:
+          type: string
+          format: date-time
+        revoked_at:
+          type: string
+          format: date-time
+          nullable: true
+        last_used:
+          type: string
+          format: date-time
+          nullable: true
+
+    CreateUserRequest:
+      type: object
+      description: Credentials for a new user
+      required:
+        - username
+        - password
+      properties:
+        username:
+          type: string
+          description: >-
+            Must be ASCII alphanumeric and may contain `-` and `_`. Max 50
+            characters.
+        password:
+          type: string
+          format: password
+      example:
+        username: testuser
+        password: password
+    CreateUserResponse:
+      type: object
+      description: The created user and its initial access token
+      required:
+        - id
+        - username
+        - access_token
+      properties:
+        id:
+          type: integer
+          format: int64
+        username:
+          type: string
+        access_token:
+          type: string
+          description: The initial access token, valid for 365 days, prefixed with `cfs_`
+          example: cfs_something
+
+    GetUserResponse:
+      type: object
+      description: Information about a user
+      required:
+        - id
+        - username
+        - role
+        - created_at
+        - enabled
+      properties:
+        id:
+          type: integer
+          format: int64
+        username:
+          type: string
+        role:
+          $ref: '#/components/schemas/Role'
+        created_at:
+          type: string
+          format: date-time
+        enabled:
+          type: boolean
+
+    UpdateUserRequest:
+      type: object
+      description: The fields to update for a user
+      properties:
+        enabled:
+          type: boolean
+          description: Whether the user account is enabled
+        role:
+          $ref: '#/components/schemas/Role'
+      example:
+        role: Admin
+        enabled: true
+    UpdateUserResponse:
+      type: object
+      description: The resulting state of the updated user
+      required:
+        - id
+        - username
+        - role
+        - created_at
+        - enabled
+      properties:
+        id:
+          type: integer
+          format: int64
+        username:
+          type: string
+        role:
+          $ref: '#/components/schemas/Role'
+        created_at:
+          type: string
+          format: date-time
+        enabled:
+          type: boolean

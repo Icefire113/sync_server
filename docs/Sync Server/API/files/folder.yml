@@ -1,9 +1,0 @@
-info:
-  name: files
-  type: folder
-  seq: 2
-
-request:
-  auth:
-    type: bearer
-    token: "{{TEST_AUTH_TOKEN}}"
