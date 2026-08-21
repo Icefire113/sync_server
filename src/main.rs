@@ -1,10 +1,6 @@
 use std::{env, path::Path, sync::Arc};
 
 use anyhow::{Context, anyhow};
-use argon2::{
-    Argon2, PasswordHash, PasswordHasher,
-    password_hash::{SaltString, rand_core::OsRng},
-};
 use aws_config::Region;
 use axum::{Router, routing::get};
 use dotenvy::dotenv;
@@ -33,7 +29,6 @@ mod util;
 #[derive(Debug, Clone)]
 struct AppState {
     pub db: DatabaseConnection,
-    pub admin_token_hash: String,
     pub max_file_size: u64,
     pub storage: Arc<dyn StorageProvider>,
 }
@@ -48,7 +43,7 @@ async fn main() -> anyhow::Result<()> {
         Config::create_if_not_exists().context(anyhow!("Failed to create/ parse config"))?;
 
     info!(
-        "Max file size: {} (as bytes: {})",
+        "Max file size: {} ({} bytes)",
         config.max_file_size, config.max_file_size.0
     );
     match &config.storage_backend {
@@ -146,24 +141,8 @@ async fn main() -> anyhow::Result<()> {
         .context(anyhow!("Failed to run db migrations"))?;
     info!("DB migrations applied");
 
-    let admin_token_hash: String = match config.admin_token {
-        Some(token) => PasswordHash::new(&token)
-            .context(anyhow!("Failed to parse saved admin token hash"))?
-            .to_string(),
-        None => {
-            let tok: String = util::get_random_string_s();
-            info!("Admin token not provided, generating random token");
-            info!("Instnace admin token: {}", tok);
-            Argon2::default()
-                .hash_password(tok.as_bytes(), &SaltString::generate(&mut OsRng))
-                .context(anyhow!("Failed to hash generated admin token"))?
-                .to_string()
-        }
-    };
-
     let app_state: AppState = AppState {
         db,
-        admin_token_hash,
         max_file_size: config.max_file_size.0,
         storage: match &config.storage_backend {
             config::StorageBackend::Local(local_storage_config) => {

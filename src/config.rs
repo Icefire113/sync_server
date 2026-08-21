@@ -134,7 +134,6 @@ impl serde::Serialize for FileSize {
 #[derive(Debug, Default, serde::Deserialize, serde::Serialize)]
 pub struct Config {
     pub log_http_requests: bool,
-    pub admin_token: Option<String>,
     pub max_file_size: FileSize,
     pub storage_backend: StorageBackend,
 }
