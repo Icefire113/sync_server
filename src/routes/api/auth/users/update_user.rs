@@ -1,22 +1,18 @@
+use crate::AppState;
+use api_types::{
+    ApiError, ApiResponse,
+    internal_err::InternalErrorCode,
+    update_user::{UpdateUserReq, UpdateUserRes},
+};
 use axum::{
     Json,
     extract::{Path, State},
     http::StatusCode,
 };
 use axum_extra::extract::WithRejection;
+use entity::user;
 use sea_orm::{ActiveModelTrait, ActiveValue::Set, EntityTrait, TryIntoModel};
 use tracing::error;
-
-use entity::user;
-
-use crate::{
-    AppState,
-    routes::types::{
-        ApiError, ApiResponse,
-        internal_err::InternalErrorCode,
-        update_user::{UpdateUserReq, UpdateUserRes},
-    },
-};
 
 pub async fn update_user(
     State(state): State<AppState>,

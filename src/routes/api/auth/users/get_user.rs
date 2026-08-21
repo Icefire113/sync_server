@@ -4,14 +4,13 @@ use axum::{
     http::StatusCode,
 };
 use axum_extra::extract::WithRejection;
-use entity::user;
 use sea_orm::EntityTrait;
 use tracing::error;
 
-use crate::{
-    AppState,
-    routes::types::{ApiError, ApiResponse, get_user::GetUserRes, internal_err::InternalErrorCode},
-};
+use api_types::{ApiError, ApiResponse, get_user::GetUserRes, internal_err::InternalErrorCode};
+use entity::user;
+
+use crate::AppState;
 
 #[axum::debug_handler]
 pub async fn get_user(

@@ -6,12 +6,13 @@ use axum_extra::extract::WithRejection;
 use sea_orm::{ActiveModelTrait, EntityTrait};
 use tracing::error;
 
+use api_types::{
+    ApiError, ApiResponse,
+    internal_err::InternalErrorCode,
+};
 use entity::user;
 
-use crate::{
-    AppState,
-    routes::types::{ApiError, ApiResponse, internal_err::InternalErrorCode},
-};
+use crate::AppState;
 
 pub async fn delete_user(
     State(state): State<AppState>,

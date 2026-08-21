@@ -12,12 +12,10 @@ use sea_orm::{
 use sha2::{Digest, Sha256};
 use tracing::error;
 
+use api_types::{ApiError, internal_err::InternalErrorCode};
 use entity::{access_token, user};
 
-use crate::{
-    AppState,
-    routes::types::{ApiError, internal_err::InternalErrorCode},
-};
+use crate::AppState;
 
 const AUTH_HEADER: &str = "Authorization";
 pub const ACCESS_TOKEN_PREFIX: &str = "cfs_";

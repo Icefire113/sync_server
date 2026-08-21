@@ -1,16 +1,13 @@
-pub use api_types::*;
-
-#[cfg(test)]
 mod tests {
-    use crate::routes::types::Role as ApiRole;
 
     #[test]
     fn api_role_matches_entity_role_serialization() {
-        for api in [ApiRole::Banned, ApiRole::User, ApiRole::Admin] {
+        use api_types::Role;
+        for api in [Role::Banned, Role::User, Role::Admin] {
             let db = match api {
-                ApiRole::Banned => entity::user::Role::Banned,
-                ApiRole::User => entity::user::Role::User,
-                ApiRole::Admin => entity::user::Role::Admin,
+                Role::Banned => entity::user::Role::Banned,
+                Role::User => entity::user::Role::User,
+                Role::Admin => entity::user::Role::Admin,
             };
             assert_eq!(
                 serde_json::to_string(&api).unwrap(),
@@ -22,9 +19,10 @@ mod tests {
 
     #[test]
     fn api_role_round_trips_to_entity_role() {
-        for api in [ApiRole::Banned, ApiRole::User, ApiRole::Admin] {
+        use api_types::Role;
+        for api in [Role::Banned, Role::User, Role::Admin] {
             let db: entity::user::Role = api.into();
-            let back: ApiRole = db.into();
+            let back: Role = db.into();
             assert_eq!(api, back);
         }
     }

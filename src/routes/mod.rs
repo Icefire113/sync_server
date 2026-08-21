@@ -1,3 +1,4 @@
 pub mod api;
-pub mod types;
 pub mod version;
+
+mod api_type_test;

@@ -6,14 +6,12 @@ use sea_orm::{
 };
 use tracing::error;
 
+use api_types::{
+    ApiError, ApiResponse, internal_err::InternalErrorCode, revoke_token::RevokeTokenReq,
+};
 use entity::{access_token, user};
 
-use crate::{
-    AppState,
-    routes::types::{
-        ApiError, ApiResponse, internal_err::InternalErrorCode, revoke_token::RevokeTokenReq,
-    },
-};
+use crate::AppState;
 
 pub async fn revoke_token(
     State(state): State<AppState>,

@@ -9,18 +9,14 @@ use sea_orm::{ActiveModelTrait, ActiveValue::Set};
 use sha2::{Digest, Sha256};
 use tracing::error;
 
+use api_types::{
+    ApiError, ApiResponse,
+    internal_err::InternalErrorCode,
+    request_token::{RequestTokenReq, RequestTokenRes},
+};
 use entity::{access_token, user};
 
-use crate::{
-    AppState,
-    middleware::auth::ACCESS_TOKEN_PREFIX,
-    routes::types::{
-        ApiError, ApiResponse,
-        internal_err::InternalErrorCode,
-        request_token::{RequestTokenReq, RequestTokenRes},
-    },
-    util::get_random_string_s,
-};
+use crate::{AppState, middleware::auth::ACCESS_TOKEN_PREFIX, util::get_random_string_s};
 
 pub async fn request_token(
     State(state): State<AppState>,

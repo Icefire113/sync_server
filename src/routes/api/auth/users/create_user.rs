@@ -9,21 +9,17 @@ use sea_orm::{ActiveModelTrait, ActiveValue::Set, DbErr, TransactionTrait};
 use sha2::{Digest, Sha256};
 use tracing::error;
 
+use api_types::{
+    ApiError, ApiResponse,
+    create_user::{CreateUserReq, CreateUserRes},
+    internal_err::InternalErrorCode,
+};
 use entity::{
     access_token,
     user::{self, Model},
 };
 
-use crate::{
-    AppState,
-    middleware::auth::ACCESS_TOKEN_PREFIX,
-    routes::types::{
-        ApiError, ApiResponse,
-        create_user::{CreateUserReq, CreateUserRes},
-        internal_err::InternalErrorCode,
-    },
-    util::get_random_string_s,
-};
+use crate::{AppState, middleware::auth::ACCESS_TOKEN_PREFIX, util::get_random_string_s};
 
 pub async fn create_user(
     State(state): State<AppState>,
