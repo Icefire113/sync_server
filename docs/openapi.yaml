@@ -61,6 +61,50 @@ paths:
           $ref: '#/components/responses/PayloadTooLarge'
         '500':
           $ref: '#/components/responses/InternalServerError'
+    get:
+      summary: List tracked files
+      description: >-
+        Lists the tracked files (id, name, hash) owned by the authenticated
+        user, with optional pagination.
+      operationId: get_users_files
+      tags:
+        - files
+      parameters:
+        - name: include_deleted
+          in: query
+          description: Whether to include deleted files in the results
+          required: true
+          schema:
+            type: boolean
+        - name: limit
+          in: query
+          description: Maximum number of files to return (default 100)
+          required: false
+          schema:
+            type: integer
+            format: uint32
+            minimum: 1
+        - name: offset
+          in: query
+          description: Number of files to skip (default 0)
+          required: false
+          schema:
+            type: integer
+            format: uint32
+            minimum: 0
+      responses:
+        '200':
+          description: List of the user's tracked files
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetAllFilesResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
 
   /api/files/{id}:
     parameters:
@@ -646,6 +690,35 @@ components:
           type: string
           format: uuid
           description: The id of the created file
+
+    GetAllFilesResponse:
+      type: object
+      description: A page of the authenticated user's tracked files
+      required:
+        - files
+      properties:
+        files:
+          type: array
+          description: The tracked files owned by the user
+          items:
+            $ref: '#/components/schemas/PartialFileInfo'
+    PartialFileInfo:
+      type: object
+      description: A lightweight reference to a tracked file
+      required:
+        - id
+        - name
+        - hash
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        hash:
+          type: integer
+          format: uint64
+          description: Hash of the file contents
 
     GetFileInfoResponse:
       type: object

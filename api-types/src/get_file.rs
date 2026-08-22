@@ -24,8 +24,24 @@ pub type GetFileContentRes = Vec<u8>;
 #[derive(Debug)]
 pub struct GetAllFilesReq {
     pub include_deleted: bool,
+    #[cfg_attr(
+        feature = "server",
+        serde(default, deserialize_with = "deserialize_limit")
+    )]
     pub limit: Option<u32>,
     pub offset: Option<u32>,
+}
+
+#[cfg(feature = "server")]
+fn deserialize_limit<'de, D>(deserializer: D) -> Result<Option<u32>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    let limit: Option<u32> = serde::Deserialize::deserialize(deserializer)?;
+    if limit.is_some_and(|limit| limit < 1) {
+        return Err(serde::de::Error::custom("limit must be >= 1"));
+    }
+    Ok(limit)
 }
 
 #[cfg(feature = "client")]
