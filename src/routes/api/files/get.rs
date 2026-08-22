@@ -1,20 +1,60 @@
 use api_types::{
     ApiError, ApiResponse,
-    get_file::{GetFileContentRes, GetFileInfoRes},
+    get_file::{
+        GetAllFilesReq, GetAllFilesRes, GetFileContentRes, GetFileInfoRes, PartialFileInfo,
+    },
     internal_err::InternalErrorCode,
 };
 use axum::{
     Extension, Json,
-    extract::{Path, State},
+    extract::{Path, Query, State},
     http::StatusCode,
 };
 use axum_extra::extract::WithRejection;
 use entity::{tracked_file, user};
-use sea_orm::{ColumnTrait, EntityTrait, QueryFilter};
+use sea_orm::{ColumnTrait, EntityTrait, Order, QueryFilter, QueryOrder, QuerySelect};
 use tracing::{error, warn};
 use uuid::Uuid;
 
 use crate::{AppState, storage::StorageError};
+
+pub async fn get_users_files(
+    State(state): State<AppState>,
+    Extension(user): Extension<user::Model>,
+    WithRejection(Query(req_params), _): WithRejection<Query<GetAllFilesReq>, ApiError>,
+) -> ApiResponse<Json<GetAllFilesRes>> {
+    let files_query = tracked_file::Entity::find()
+        .filter(tracked_file::Column::UserId.eq(user.id))
+        .order_by(tracked_file::Column::UpdatedAt, Order::Asc)
+        .limit(req_params.limit.unwrap_or(100) as u64)
+        .offset(req_params.offset.unwrap_or(0) as u64);
+
+    let files_query = if !req_params.include_deleted {
+        files_query.filter(tracked_file::Column::DeletedAt.is_null())
+    } else {
+        files_query
+    };
+
+    let files: Vec<PartialFileInfo> = files_query
+        .all(&state.db)
+        .await
+        .map_err(|e| {
+            error!("Error fetching users files from db {:?}", e);
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                InternalErrorCode::InternalDBError,
+            )
+        })?
+        .into_iter()
+        .map(|f| PartialFileInfo {
+            id: f.id,
+            name: f.name,
+            hash: f.hash as u64,
+        })
+        .collect();
+
+    Ok((StatusCode::OK, Json(GetAllFilesRes { files })))
+}
 
 pub async fn get_file_info(
     State(state): State<AppState>,
