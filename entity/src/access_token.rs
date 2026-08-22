@@ -10,6 +10,7 @@ pub struct Model {
     /// sha2-256 hash of the token
     #[sea_orm(unique, indexed)]
     pub token_hash: Vec<u8>,
+    #[sea_orm(indexed)]
     pub user_id: i64,
     #[sea_orm(belongs_to, from = "user_id", to = "id")]
     pub user: BelongsTo<crate::user::Entity>,
