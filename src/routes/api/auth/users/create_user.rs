@@ -1,7 +1,4 @@
-use argon2::{
-    Argon2, PasswordHasher,
-    password_hash::{SaltString, rand_core::OsRng},
-};
+use argon2::{Argon2, PasswordHasher};
 use axum::{Json, extract::State, http::StatusCode};
 use axum_extra::extract::WithRejection;
 use chrono::Utc;
@@ -50,7 +47,7 @@ pub async fn create_user(
             Some(_) => Err((StatusCode::BAD_REQUEST, InternalErrorCode::UsernameTaken).into()),
             None => {
                 let hashed = Argon2::default()
-                    .hash_password(input.password.as_bytes(), &SaltString::generate(&mut OsRng))
+                    .hash_password(input.password.as_bytes())
                     .map_err(|e| {
                         error!("Error hashing access key: {:?}", e);
                         (

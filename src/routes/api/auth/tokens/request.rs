@@ -1,7 +1,4 @@
-use argon2::{
-    Argon2, PasswordHash, PasswordHasher, PasswordVerifier,
-    password_hash::{SaltString, rand_core::OsRng},
-};
+use argon2::{Argon2, PasswordHash, PasswordHasher, PasswordVerifier};
 use axum::{Json, extract::State, http::StatusCode};
 use axum_extra::extract::WithRejection;
 use chrono::{Duration, Utc};
@@ -35,8 +32,7 @@ pub async fn request_token(
         Some(user) => user,
         None => {
             // dummy to prevent timing attacks
-            let _ = Argon2::default()
-                .hash_password(req.password.as_bytes(), &SaltString::generate(&mut OsRng));
+            let _ = Argon2::default().hash_password(req.password.as_bytes());
             return Err((
                 StatusCode::BAD_REQUEST,
                 InternalErrorCode::InvalidUsernameOrPassword,
@@ -59,7 +55,7 @@ pub async fn request_token(
             })?,
         )
         .map_err(|e| match e {
-            argon2::password_hash::Error::Password => (
+            argon2::password_hash::Error::PasswordInvalid => (
                 StatusCode::BAD_REQUEST,
                 InternalErrorCode::InvalidUsernameOrPassword,
             ),
