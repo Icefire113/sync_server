@@ -47,5 +47,4 @@ response-compression = [
     "tower-http/compression-gzip",
     "tower-http/compression-zstd",
 ]
-log-to-file = []
 default = []

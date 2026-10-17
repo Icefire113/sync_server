@@ -1,6 +1,3 @@
-#[cfg(feature = "log-to-file")]
-use std::{fs::File, sync::Mutex};
-
 use std::fmt::Display;
 
 use anyhow::Context;
@@ -43,9 +40,6 @@ impl Display for UpperCaseHexSlice<'_> {
 }
 
 pub fn init_logging() -> anyhow::Result<()> {
-    #[cfg(feature = "log-to-file")]
-    let log_file = File::create("sync_server.log").context("Creating log files")?;
-
     #[cfg(debug_assertions)]
     let default_filter = format!(
         "error,{}=trace,tower_http=debug,axum::rejection=trace",
@@ -62,23 +56,12 @@ pub fn init_logging() -> anyhow::Result<()> {
 
     let registry = tracing_subscriber::registry().with(env_filter);
 
-    #[cfg(feature = "log-to-file")]
-    let file_layer = fmt::layer()
-        .with_file(true)
-        .with_target(false)
-        .with_line_number(true)
-        .with_ansi(false)
-        .with_writer(Mutex::new(log_file));
-
     let stderr_layer = fmt::layer()
         .with_file(true)
         .with_ansi(true)
         .with_line_number(true)
         .with_target(false)
         .with_writer(std::io::stderr);
-
-    #[cfg(feature = "log-to-file")]
-    let registry = registry.with(file_layer);
 
     let registry = registry.with(stderr_layer);
     registry.try_init().context("init tracing")?;
