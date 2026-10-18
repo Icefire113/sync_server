@@ -10,12 +10,12 @@ FROM rust:1-slim-trixie AS builder
 # falls back to bindgen on this target.
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
-        ca-certificates \
-        pkg-config \
-        libssl-dev \
-        cmake \
-        clang \
-        libclang-dev \
+    ca-certificates \
+    pkg-config \
+    libssl-dev \
+    cmake \
+    clang \
+    libclang-dev \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /build
@@ -23,27 +23,8 @@ WORKDIR /build
 # Optional comma/space separated feature list, e.g. --build-arg CARGO_FEATURES=response-compression
 ARG CARGO_FEATURES=""
 
-# Build dependencies first with dummy sources so they stay cached when only
-# application code changes.
-COPY Cargo.toml Cargo.lock ./
-COPY api-types/Cargo.toml api-types/Cargo.toml
-COPY entity/Cargo.toml entity/Cargo.toml
-COPY migration/Cargo.toml migration/Cargo.toml
-RUN mkdir -p src api-types/src entity/src migration/src \
-    && echo 'fn main() {}' > src/main.rs \
-    && : > api-types/src/lib.rs \
-    && : > entity/src/lib.rs \
-    && : > migration/src/lib.rs \
-    && cargo build --release --locked ${CARGO_FEATURES:+--features "$CARGO_FEATURES"}
-
-# Real sources; this only rebuilds the workspace crates.
 COPY . .
-# COPY preserves the sources' (older) mtimes, so cargo would still consider the
-# dummy crates fresh and ship the do-nothing `fn main() {}` binary, which exits
-# 0 immediately: a silent restart loop with no logs. Dropping only the workspace
-# crates' artifacts forces them to rebuild while keeping the dependency cache.
-RUN cargo clean -p sync_server -p api-types -p entity -p migration \
-    && cargo build --release --locked ${CARGO_FEATURES:+--features "$CARGO_FEATURES"}
+RUN cargo build --release --locked ${CARGO_FEATURES:+--features "$CARGO_FEATURES"}
 
 # ---------- runtime ----------
 FROM debian:trixie-slim AS runtime
@@ -53,8 +34,8 @@ FROM debian:trixie-slim AS runtime
 # (the t64 suffix is trixie's time_t-transition package name).
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
-        ca-certificates \
-        libssl3t64 \
+    ca-certificates \
+    libssl3t64 \
     && rm -rf /var/lib/apt/lists/* \
     && groupadd --system --gid 10001 app \
     && useradd --system --uid 10001 --gid app --home-dir /app --shell /usr/sbin/nologin app
