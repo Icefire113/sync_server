@@ -38,7 +38,12 @@ RUN mkdir -p src api-types/src entity/src migration/src \
 
 # Real sources; this only rebuilds the workspace crates.
 COPY . .
-RUN cargo build --release --locked ${CARGO_FEATURES:+--features "$CARGO_FEATURES"}
+# COPY preserves the sources' (older) mtimes, so cargo would still consider the
+# dummy crates fresh and ship the do-nothing `fn main() {}` binary, which exits
+# 0 immediately: a silent restart loop with no logs. Dropping only the workspace
+# crates' artifacts forces them to rebuild while keeping the dependency cache.
+RUN cargo clean -p sync_server -p api-types -p entity -p migration \
+    && cargo build --release --locked ${CARGO_FEATURES:+--features "$CARGO_FEATURES"}
 
 # ---------- runtime ----------
 FROM debian:trixie-slim AS runtime
