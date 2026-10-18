@@ -1,0 +1,20 @@
+# Build artifacts
+**/target/
+
+# VCS
+.git/
+.gitignore
+.github/
+
+# Local secrets and runtime state (the image creates these itself)
+.env
+.env.*
+config.json
+storage/
+sync_server.log
+
+# Docs and editor noise
+docs/
+*.md
+.vscode/
+.idea/

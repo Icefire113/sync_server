@@ -1,0 +1,61 @@
+# Sample stack for local testing only. Change the database password before
+# exposing this anywhere.
+#
+#   docker compose up --build
+#   docker compose down          # keeps volumes
+#   docker compose down -v       # wipes the database and stored blobs
+#
+# The server's optional storage/config customisation lives in /app/config.json,
+# which is generated on first start. Create one on the host and bind-mount it
+# (see the commented line under the server's volumes) if you need S3 or a
+# non-default max_file_size.
+
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: sync
+      POSTGRES_PASSWORD: sync
+      POSTGRES_DB: sync_server
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      # The server runs migrations immediately after connecting, so wait for
+      # Postgres to accept connections before starting it.
+      test: ["CMD-SHELL", "pg_isready -U sync -d sync_server"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+    restart: unless-stopped
+
+  server:
+    build:
+      context: .
+      args:
+        # e.g. CARGO_FEATURES=response-compression (or set it in .env)
+        CARGO_FEATURES: ${CARGO_FEATURES:-}
+    image: sync-server:local
+    environment:
+      DATABASE_URL: postgres://sync:sync@db:5432/sync_server
+      HOST: 0.0.0.0
+      PORT: "3000"
+      # RUST_LOG: info,sync_server=debug
+      #
+      # S3 backend alternative: put an S3 config in a bind-mounted config.json
+      # and provide credentials here.
+      # AWS_ACCESS_KEY_ID: ...
+      # AWS_SECRET_ACCESS_KEY: ...
+      # AWS_REGION: ...
+    ports:
+      - "${SYNC_PORT:-3000}:3000"
+    volumes:
+      - sync-storage:/app/storage
+      # - ./config.json:/app/config.json  # file must exist on the host first
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+  sync-storage:
