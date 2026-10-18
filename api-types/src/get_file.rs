@@ -69,4 +69,5 @@ pub struct PartialFileInfo {
     pub id: Uuid,
     pub name: String,
     pub hash: u64,
+    pub deleted_at: Option<DateTime<Utc>>,
 }

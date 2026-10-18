@@ -50,6 +50,7 @@ pub async fn get_users_files(
             id: f.id,
             name: f.name,
             hash: f.hash as u64,
+            deleted_at: f.deleted_at,
         })
         .collect();
 

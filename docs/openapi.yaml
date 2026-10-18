@@ -64,8 +64,8 @@ paths:
     get:
       summary: List tracked files
       description: >-
-        Lists the tracked files (id, name, hash) owned by the authenticated
-        user, with optional pagination.
+        Lists the tracked files (id, name, hash, deletion status) owned by the
+        authenticated user, with optional pagination.
       operationId: get_users_files
       tags:
         - files
@@ -709,6 +709,7 @@ components:
         - id
         - name
         - hash
+        - deleted_at
       properties:
         id:
           type: string
@@ -719,6 +720,13 @@ components:
           type: integer
           format: uint64
           description: Hash of the file contents
+        deleted_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: >-
+            When the file was soft-deleted, if ever; null for files that are
+            not deleted
 
     GetFileInfoResponse:
       type: object
