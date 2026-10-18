@@ -21,7 +21,7 @@ RUN apt-get update \
 WORKDIR /build
 
 # Optional comma/space separated feature list, e.g. --build-arg CARGO_FEATURES=response-compression
-ARG CARGO_FEATURES=""
+ARG CARGO_FEATURES="response-compression"
 
 COPY . .
 RUN cargo build --release --locked ${CARGO_FEATURES:+--features "$CARGO_FEATURES"}
