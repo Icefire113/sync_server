@@ -1,5 +1,14 @@
 # sync_server
 
+## Deployment
+
+sync_server only exposes a plain HTTP listener (`HOST`/`PORT`, default
+`0.0.0.0:3000`). It does not terminate TLS or manage certificates itself.
+
+If the server is reachable from outside a trusted network, it is strongly
+recommended to run it behind a reverse proxy (nginx, Caddy, Traefik, ...) that
+terminates TLS and forwards requests to it.
+
 ## Storage Options
 
 Currently there are 2 supported storage backends local storage and S3
