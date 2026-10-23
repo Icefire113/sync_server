@@ -1,6 +1,6 @@
 [package]
 name = "sync_server"
-version = "0.2.0"
+version = "0.2.1"
 edition = "2024"
 
 [workspace]
@@ -12,7 +12,7 @@ api-types = { path = "api-types", features = ["server"] }
 entity = { path = "entity" }
 migration = { path = "migration" }
 axum = { version = "0.8.9", features = ["macros"] }
-tokio = { version = "1.53.3", features = ["full"] }
+tokio = { version = "1.54.1", features = ["full"] }
 tower = { version = "0.5.3", features = ["full"] }
 tracing = { version = "0.1.44" }
 tracing-subscriber = { version = "0.3.23", features = ["env-filter"] }
@@ -37,8 +37,8 @@ sha2 = "0.11.1"
 lazy_static = "1.5.1"
 async-trait = "0.1.92"
 thiserror = "2.0.21"
-aws-sdk-s3 = { version = "1.152.0", features = ["behavior-version-latest"] }
-aws-config = { version = "1.12.0", features = ["behavior-version-latest"] }
+aws-sdk-s3 = { version = "1.155.0", features = ["behavior-version-latest"] }
+aws-config = { version = "1.13.0", features = ["behavior-version-latest"] }
 axum-extra = { version = "0.12.6", features = ["with-rejection"] }
 
 [features]
